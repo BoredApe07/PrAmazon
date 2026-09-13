@@ -1,5 +1,5 @@
-from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import List, Optional
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -11,12 +11,55 @@ router = APIRouter(prefix="/products", tags=["Products"])
 
 
 @router.get("/", response_model=List[ProductResponse])
-def get_products(db: Session = Depends(get_db)):
+def get_products(
+    category: Optional[str] = Query(None, description="Filter products by category (e.g. Electronics, Books)"),
+    search: Optional[str] = Query(None, description="Search products by title or description keyword"),
+    db: Session = Depends(get_db)
+):
     """
-    Fetch all products from the SQLite database.
+    Fetch all products, with optional search keyword and category filtering.
     """
-    products = db.query(Product).all()
-    return products
+    query = db.query(Product)
+
+    # 1. Category Filter (Case-insensitive)
+    if category:
+        query = query.filter(Product.category.ilike(f"%{category}%"))
+
+    # 2. Keyword Search across Title OR Description
+    if search:
+        query = query.filter(
+            (Product.title.ilike(f"%{search}%")) | 
+            (Product.description.ilike(f"%{search}%"))
+        )
+
+    return query.all()
+
+
+@router.get("/categories", response_model=List[str])
+def get_categories(db: Session = Depends(get_db)):
+    """
+    Fetch all unique product categories available in the store.
+    Example: ["Electronics", "Home & Kitchen", "Fashion", "Books"]
+    """
+    # Query distinct categories from SQLite
+    results = db.query(Product.category).distinct().all()
+    # Extract strings from SQL tuples: [('Electronics',), ...] -> ['Electronics', ...]
+    return [c[0] for c in results]
+
+
+@router.get("/{product_id}", response_model=ProductResponse)
+def get_product_by_id(product_id: int, db: Session = Depends(get_db)):
+    """
+    Fetch a single product by its unique database ID.
+    Returns HTTP 404 if the product does not exist.
+    """
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Product with ID {product_id} was not found."
+        )
+    return product
 
 
 @router.post("/", response_model=ProductResponse, status_code=status.HTTP_201_CREATED)
