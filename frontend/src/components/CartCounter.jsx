@@ -70,7 +70,7 @@ export default function CartCounter() {
             onClick={handleIncrease}
             title="Increase quantity"
           >
-            '1'
+            +
           </button>
 
           {quantity > 0 && (
