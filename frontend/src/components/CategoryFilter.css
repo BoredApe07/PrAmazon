@@ -1,0 +1,55 @@
+/* Category Filter Bar Styling */
+
+.category-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  overflow-x: auto;
+  padding-bottom: 0.75rem;
+  margin-bottom: 1.75rem;
+  scrollbar-width: thin;
+}
+
+.category-filter-bar::-webkit-scrollbar {
+  height: 4px;
+}
+
+.category-filter-bar::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+.category-pill {
+  white-space: nowrap;
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  padding: 0.5rem 1.15rem;
+  border-radius: 9999px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.category-pill:hover {
+  color: var(--text-primary);
+  border-color: rgba(255, 153, 0, 0.4);
+  background: rgba(255, 255, 255, 0.03);
+  transform: translateY(-1px);
+}
+
+/* Active Highlight State */
+.category-pill.active {
+  background: var(--accent-gold);
+  color: #0b0f19;
+  font-weight: 700;
+  border-color: var(--accent-gold);
+  box-shadow: 0 4px 12px rgba(255, 153, 0, 0.25);
+}
+
+.category-pill.active:hover {
+  background: var(--accent-gold-hover);
+  color: #0b0f19;
+}

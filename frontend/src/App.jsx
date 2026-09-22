@@ -1,23 +1,40 @@
 import { useState, useEffect } from 'react'
 import ProductCard from './components/ProductCard'
-import { fetchProducts } from './services/api'
+import CategoryFilter from './components/CategoryFilter'
+import { fetchProducts, fetchCategories } from './services/api'
 import './App.css'
 
 export default function App() {
-  // Storefront products state
+  // Storefront products & categories state
   const [products, setProducts] = useState([])
+  const [categories, setCategories] = useState([])
+  const [selectedCategory, setSelectedCategory] = useState('')
+  const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
   // Shopping cart state (lifted up to App level)
   const [cart, setCart] = useState([])
 
-  // Load products from FastAPI backend
+  // Fetch unique categories once on startup
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const data = await fetchCategories()
+        setCategories(data)
+      } catch (err) {
+        console.error('Failed to load categories:', err)
+      }
+    }
+    loadCategories()
+  }, [])
+
+  // Fetch products whenever selectedCategory OR searchTerm changes
   const loadProducts = async () => {
     setLoading(true)
     setError(null)
     try {
-      const data = await fetchProducts()
+      const data = await fetchProducts(selectedCategory, searchTerm)
       setProducts(data)
     } catch (err) {
       setError(err.message || 'Failed to connect to backend service')
@@ -28,7 +45,7 @@ export default function App() {
 
   useEffect(() => {
     loadProducts()
-  }, [])
+  }, [selectedCategory, searchTerm])
 
   // Handler to add a product to the cart
   const handleAddToCart = (product) => {
@@ -51,6 +68,27 @@ export default function App() {
           <div className="brand">
             <span className="brand-text">Pr</span>
             <span className="brand-accent">Amazon</span>
+          </div>
+
+          {/* Central Search Bar */}
+          <div className="search-bar-container">
+            <span className="search-icon">🔍</span>
+            <input
+              type="text"
+              className="search-input"
+              placeholder="Search products, brands and keywords..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            {searchTerm && (
+              <button
+                className="clear-search-btn"
+                onClick={() => setSearchTerm('')}
+                title="Clear search"
+              >
+                ✕
+              </button>
+            )}
           </div>
 
           <div className="navbar-actions">
@@ -91,6 +129,13 @@ export default function App() {
               {loading ? 'Refreshing...' : `${products.length} Items Available`}
             </span>
           </div>
+
+          {/* Category Filter Pills */}
+          <CategoryFilter
+            categories={categories}
+            selectedCategory={selectedCategory}
+            onSelectCategory={setSelectedCategory}
+          />
 
           {/* Loading State */}
           {loading && (
