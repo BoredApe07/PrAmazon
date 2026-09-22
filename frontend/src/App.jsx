@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import ProductCard from './components/ProductCard'
 import CategoryFilter from './components/CategoryFilter'
+import CartDrawer from './components/CartDrawer'
+import CheckoutModal from './components/CheckoutModal'
 import { fetchProducts, fetchCategories } from './services/api'
 import './App.css'
 
@@ -13,8 +15,26 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  // Shopping cart state (lifted up to App level)
-  const [cart, setCart] = useState([])
+  // Shopping cart state with localStorage persistence
+  const [cart, setCart] = useState(() => {
+    try {
+      const saved = localStorage.getItem('pramazon_cart')
+      return saved ? JSON.parse(saved) : []
+    } catch {
+      return []
+    }
+  })
+  const [isCartOpen, setIsCartOpen] = useState(false)
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
+
+  // Save cart to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('pramazon_cart', JSON.stringify(cart))
+    } catch (err) {
+      console.error('Failed to save cart to localStorage:', err)
+    }
+  }, [cart])
 
   // Fetch unique categories once on startup
   useEffect(() => {
@@ -47,13 +67,61 @@ export default function App() {
     loadProducts()
   }, [selectedCategory, searchTerm])
 
-  // Handler to add a product to the cart
+  // Handler to add a product to the cart with quantity tracking
   const handleAddToCart = (product) => {
-    setCart((prevCart) => [...prevCart, product])
+    setCart((prevCart) => {
+      // 1. Check if the item is already in the cart
+      const existingItem = prevCart.find((item) => item.id === product.id)
+
+      if (existingItem) {
+        // 2. If it exists, increase its quantity by 1
+        return prevCart.map((item) =>
+          item.id === product.id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        )
+      }
+
+      // 3. If brand new, add it with a starting quantity of 1
+      return [...prevCart, { ...product, quantity: 1 }]
+    })
   }
 
-  // Calculate cart total price
-  const cartTotal = cart.reduce((sum, item) => sum + item.price, 0)
+  // Adjust quantity (+1 or -1) from inside the Cart Drawer
+  const handleUpdateQuantity = (productId, delta) => {
+    setCart((prevCart) =>
+      prevCart
+        .map((item) => {
+          if (item.id === productId) {
+            const newQty = item.quantity + delta
+            return newQty > 0 ? { ...item, quantity: newQty } : null
+          }
+          return item
+        })
+        .filter(Boolean)
+    )
+  }
+
+  // Remove an item completely from the cart
+  const handleRemoveItem = (productId) => {
+    setCart((prevCart) => prevCart.filter((item) => item.id !== productId))
+  }
+
+  // Handle successful order placement (clear cart)
+  const handleOrderSuccess = () => {
+    setCart([])
+    try {
+      localStorage.removeItem('pramazon_cart')
+    } catch (err) {
+      console.error('Failed to clear cart:', err)
+    }
+  }
+
+  // Calculate total units (e.g. 2 headphones + 1 laptop = 3 items)
+  const totalItemsCount = cart.reduce((total, item) => total + item.quantity, 0)
+
+  // Calculate cart total price (price * quantity)
+  const cartTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const formattedCartTotal = new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency: 'INR',
@@ -95,11 +163,12 @@ export default function App() {
             <div className="cart-badge-container">
               <button 
                 className="cart-btn" 
-                title={cart.length > 0 ? `Total: ${formattedCartTotal}` : 'Cart is empty'}
+                onClick={() => setIsCartOpen(true)}
+                title={totalItemsCount > 0 ? `Total: ${formattedCartTotal}` : 'Cart is empty'}
               >
                 <span className="cart-icon">🛒</span>
                 <span className="cart-label">Cart</span>
-                <span className="cart-count">{cart.length}</span>
+                <span className="cart-count">{totalItemsCount}</span>
               </button>
             </div>
           </div>
@@ -177,6 +246,29 @@ export default function App() {
           PrAmazon &copy; 2026 &bull; Powered by FastAPI, SQLAlchemy & React
         </p>
       </footer>
+
+      {/* Slide-Over Cart Drawer */}
+      {isCartOpen && (
+        <CartDrawer
+          cart={cart}
+          onClose={() => setIsCartOpen(false)}
+          onUpdateQuantity={handleUpdateQuantity}
+          onRemoveItem={handleRemoveItem}
+          onOpenCheckout={() => {
+            setIsCartOpen(false)
+            setIsCheckoutOpen(true)
+          }}
+        />
+      )}
+
+      {/* Checkout Modal */}
+      {isCheckoutOpen && (
+        <CheckoutModal
+          cart={cart}
+          onClose={() => setIsCheckoutOpen(false)}
+          onOrderSuccess={handleOrderSuccess}
+        />
+      )}
     </div>
   )
 }

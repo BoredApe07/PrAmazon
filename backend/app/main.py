@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.database import engine, Base
-from app.models import Product  # Ensure models are imported so Base registers them
+from app.models import Product, Order, OrderItem  # Ensure models are imported so Base registers them
 from app.api.v1.api import api_router
 
 # 1. Create database tables on startup if they don't exist yet

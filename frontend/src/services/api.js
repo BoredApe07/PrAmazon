@@ -33,3 +33,32 @@ export const fetchCategories = async () => {
   }
   return await response.json()
 }
+
+/**
+ * Place a new order with customer checkout details and items.
+ * 
+ * @param {Object} orderData
+ * @param {string} orderData.customer_name
+ * @param {string} orderData.customer_email
+ * @param {string} orderData.shipping_address
+ * @param {Array<{ product_id: number, quantity: number }>} orderData.items
+ */
+export const createOrder = async (orderData) => {
+  const response = await fetch(`${API_BASE_URL}/orders/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(orderData),
+  })
+
+  if (!response.ok) {
+    // Extract FastAPI detailed error message if available (e.g. "Insufficient stock")
+    const errorData = await response.json().catch(() => null)
+    const message = errorData?.detail || `Order failed: ${response.status} ${response.statusText}`
+    throw new Error(message)
+  }
+
+  return await response.json()
+}
+
