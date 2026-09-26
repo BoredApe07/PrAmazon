@@ -40,3 +40,11 @@ class OrderItem(Base):
     # Relationships
     order = relationship("Order", back_populates="items")
     product = relationship("app.models.product.Product")
+
+    @property
+    def product_title(self):
+        return self.product.title if self.product else "Product"
+
+    @property
+    def product_image_url(self):
+        return self.product.image_url if self.product else None

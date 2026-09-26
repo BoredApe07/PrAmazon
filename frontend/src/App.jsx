@@ -4,6 +4,7 @@ import CategoryFilter from './components/CategoryFilter'
 import CartDrawer from './components/CartDrawer'
 import CheckoutModal from './components/CheckoutModal'
 import ProductDetailModal from './components/ProductDetailModal'
+import OrdersModal from './components/OrdersModal'
 import { fetchProducts, fetchCategories } from './services/api'
 import './App.css'
 
@@ -27,6 +28,7 @@ export default function App() {
   })
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
+  const [isOrdersOpen, setIsOrdersOpen] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState(null)
 
   // Save cart to localStorage whenever it changes
@@ -179,6 +181,16 @@ export default function App() {
           </div>
 
           <div className="navbar-actions">
+            {/* Returns & Orders Button */}
+            <button 
+              className="orders-nav-btn"
+              onClick={() => setIsOrdersOpen(true)}
+              title="Track packages and view order history"
+            >
+              <span className="orders-nav-top">Returns</span>
+              <span className="orders-nav-bottom">& Orders</span>
+            </button>
+
             <div className="cart-badge-container">
               <button 
                 className="cart-btn" 
@@ -298,6 +310,11 @@ export default function App() {
           onAddToCart={handleAddToCart}
           onBuyNow={handleBuyNow}
         />
+      )}
+
+      {/* Returns & Orders Modal */}
+      {isOrdersOpen && (
+        <OrdersModal onClose={() => setIsOrdersOpen(false)} />
       )}
     </div>
   )

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -21,6 +21,8 @@ class OrderItemResponse(BaseModel):
     product_id: int
     quantity: int
     unit_price: float
+    product_title: Optional[str] = "Product"
+    product_image_url: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 

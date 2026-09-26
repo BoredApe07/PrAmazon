@@ -62,3 +62,50 @@ export const createOrder = async (orderData) => {
   return await response.json()
 }
 
+/**
+ * Fetch recent orders, optionally filtered by customer email.
+ */
+export const fetchOrders = async (email = '') => {
+  const query = email ? `?email=${encodeURIComponent(email)}` : ''
+  const response = await fetch(`${API_BASE_URL}/orders/${query}`)
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch orders: ${response.status} ${response.statusText}`)
+  }
+
+  return await response.json()
+}
+
+/**
+ * Fetch a single order by its ID for live tracking/receipt lookup.
+ */
+export const fetchOrderById = async (orderId) => {
+  const response = await fetch(`${API_BASE_URL}/orders/${orderId}`)
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error(`Order #${orderId} was not found. Please verify the Order ID.`)
+    }
+    throw new Error(`Failed to fetch order: ${response.status}`)
+  }
+
+  return await response.json()
+}
+
+/**
+ * Cancel an order by its ID and restore inventory stock.
+ */
+export const cancelOrder = async (orderId) => {
+  const response = await fetch(`${API_BASE_URL}/orders/${orderId}/cancel`, {
+    method: 'PUT',
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => null)
+    const message = errorData?.detail || `Failed to cancel order: ${response.status}`
+    throw new Error(message)
+  }
+
+  return await response.json()
+}
+

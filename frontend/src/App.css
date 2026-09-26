@@ -115,7 +115,40 @@
 .navbar-actions {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.25rem;
+}
+
+/* Returns & Orders Nav Button (Amazon Style) */
+.orders-nav-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0.35rem 0.65rem;
+  border-radius: 4px;
+  cursor: pointer;
+  line-height: 1.2;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.orders-nav-btn:hover {
+  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.orders-nav-top {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.orders-nav-bottom {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-primary);
 }
 
 /* Cart Button & Badge */
