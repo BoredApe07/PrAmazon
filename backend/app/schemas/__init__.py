@@ -5,6 +5,12 @@ from app.schemas.order import (
     OrderItemCreate,
     OrderItemResponse,
 )
+from app.schemas.user import (
+    UserCreate,
+    UserLogin,
+    UserResponse,
+    Token,
+)
 
 __all__ = [
     "ProductCreate",
@@ -14,4 +20,8 @@ __all__ = [
     "OrderResponse",
     "OrderItemCreate",
     "OrderItemResponse",
+    "UserCreate",
+    "UserLogin",
+    "UserResponse",
+    "Token",
 ]
