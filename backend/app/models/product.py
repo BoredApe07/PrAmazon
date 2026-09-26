@@ -20,4 +20,5 @@ class Product(Base):
     
     # 3. Rating & Inventory
     rating = Column(Float, default=4.5)
+    rating_count = Column(Integer, default=100)
     stock = Column(Integer, default=10)

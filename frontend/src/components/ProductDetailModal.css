@@ -1,0 +1,421 @@
+/* ==========================================================================
+   Product Detail Modal Styles
+   ========================================================================== */
+
+/* Fullscreen overlay backdrop */
+.product-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  z-index: 1000;
+  animation: modalBackdropFadeIn 0.2s ease-out;
+}
+
+@keyframes modalBackdropFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Modal window container */
+.product-modal-container {
+  background-color: #ffffff;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 880px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  animation: modalScaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalScaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Close button */
+.product-modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  background-color: #ffffff;
+  color: #475569;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.15s ease;
+}
+
+.product-modal-close:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+  transform: rotate(90deg);
+}
+
+/* Two-column layout grid */
+.product-modal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 2rem;
+  padding: 2.25rem;
+}
+
+/* Left Column: Image */
+.product-modal-image-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.product-modal-image-box {
+  position: relative;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 340px;
+  max-height: 420px;
+}
+
+.product-modal-img {
+  max-width: 100%;
+  max-height: 320px;
+  object-fit: contain;
+  transition: transform 0.25s ease;
+}
+
+.product-modal-img:hover {
+  transform: scale(1.04);
+}
+
+.product-modal-category-tag {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  background-color: rgba(255, 255, 255, 0.95);
+  color: #0284c7;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.3rem 0.65rem;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e2e8f0;
+}
+
+/* Right Column: Info & Actions */
+.product-modal-info-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.product-modal-title {
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.35;
+  margin: 0;
+  padding-right: 2rem;
+}
+
+/* Rating Row */
+.product-modal-rating-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.product-modal-stars {
+  color: #f59e0b;
+  letter-spacing: 1px;
+  font-size: 1rem;
+}
+
+.product-modal-rating-num {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.product-modal-rating-count {
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+/* Price Box */
+.product-modal-price-box {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+  border-top: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.product-modal-price {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.product-modal-tax-note {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+/* Stock Status Badges */
+.product-modal-stock-status {
+  display: flex;
+  align-items: center;
+}
+
+.stock-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+}
+
+.stock-badge.in-stock {
+  background-color: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.stock-badge.low-stock {
+  background-color: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.stock-badge.out-of-stock {
+  background-color: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+/* Description */
+.product-modal-desc-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.product-modal-desc-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #334155;
+  margin: 0;
+}
+
+.product-modal-description {
+  font-size: 0.9rem;
+  color: #475569;
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* Perks / Trust Badges */
+.product-modal-perks {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.perk-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.25rem;
+}
+
+.perk-icon {
+  font-size: 1.25rem;
+}
+
+.perk-text {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+/* Purchase Section */
+.product-modal-purchase-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.modal-quantity-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.modal-quantity-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.modal-quantity-stepper {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #ffffff;
+}
+
+.modal-qty-btn {
+  width: 34px;
+  height: 34px;
+  background-color: #f8fafc;
+  border: none;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1e293b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease;
+}
+
+.modal-qty-btn:hover:not(:disabled) {
+  background-color: #e2e8f0;
+}
+
+.modal-qty-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.modal-qty-display {
+  min-width: 38px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+/* Action Buttons */
+.modal-actions-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.modal-add-cart-btn {
+  padding: 0.75rem 1rem;
+  background: linear-gradient(180deg, #f7dfa5 0%, #f0c14b 100%);
+  border: 1px solid #a88734;
+  border-radius: 8px;
+  color: #111827;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.modal-add-cart-btn:hover {
+  background: linear-gradient(180deg, #f5d78e 0%, #eeb933 100%);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+.modal-buy-now-btn {
+  padding: 0.75rem 1rem;
+  background: linear-gradient(180deg, #ffa41c 0%, #ff8f00 100%);
+  border: 1px solid #e67a00;
+  border-radius: 8px;
+  color: #111827;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.modal-buy-now-btn:hover {
+  background: linear-gradient(180deg, #ff9900 0%, #e68000 100%);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+/* Added to cart confirmation banner */
+.modal-added-banner {
+  background-color: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+  padding: 0.6rem 1rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+  animation: bannerFade 0.2s ease-in;
+}
+
+@keyframes bannerFade {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .product-modal-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    padding: 1.5rem;
+  }
+
+  .product-modal-image-box {
+    min-height: 240px;
+  }
+
+  .modal-actions-row {
+    grid-template-columns: 1fr;
+  }
+}

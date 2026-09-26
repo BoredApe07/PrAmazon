@@ -9,6 +9,7 @@
   flex-direction: column;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   position: relative;
+  cursor: pointer;
 }
 
 .product-card:hover {
@@ -130,4 +131,12 @@
 
 .add-to-cart-btn:active {
   transform: scale(0.98);
+}
+
+.add-to-cart-btn:disabled {
+  background: #e2e8f0;
+  color: #94a3b8;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }

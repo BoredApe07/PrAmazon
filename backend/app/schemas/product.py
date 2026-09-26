@@ -10,6 +10,7 @@ class ProductBase(BaseModel):
     category: str
     image_url: Optional[str] = None
     rating: Optional[float] = 4.5
+    rating_count: Optional[int] = 100
     stock: Optional[int] = 10
 
 

@@ -3,6 +3,7 @@ import ProductCard from './components/ProductCard'
 import CategoryFilter from './components/CategoryFilter'
 import CartDrawer from './components/CartDrawer'
 import CheckoutModal from './components/CheckoutModal'
+import ProductDetailModal from './components/ProductDetailModal'
 import { fetchProducts, fetchCategories } from './services/api'
 import './App.css'
 
@@ -26,6 +27,7 @@ export default function App() {
   })
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
+  const [selectedProduct, setSelectedProduct] = useState(null)
 
   // Save cart to localStorage whenever it changes
   useEffect(() => {
@@ -67,32 +69,49 @@ export default function App() {
     loadProducts()
   }, [selectedCategory, searchTerm])
 
-  // Handler to add a product to the cart with quantity tracking
-  const handleAddToCart = (product) => {
+  // Handler to add a product to the cart with quantity tracking and stock limits
+  const handleAddToCart = (product, quantityToAdd = 1) => {
+    // Guard: Do not add if product has 0 stock
+    if (product.stock !== undefined && product.stock <= 0) return
+
     setCart((prevCart) => {
       // 1. Check if the item is already in the cart
       const existingItem = prevCart.find((item) => item.id === product.id)
+      const maxStock = product.stock ?? Infinity
 
       if (existingItem) {
-        // 2. If it exists, increase its quantity by 1
+        // 2. If it exists, increase quantity up to maxStock
+        const newQty = Math.min(existingItem.quantity + quantityToAdd, maxStock)
         return prevCart.map((item) =>
           item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
+            ? { ...item, quantity: newQty }
             : item
         )
       }
 
-      // 3. If brand new, add it with a starting quantity of 1
-      return [...prevCart, { ...product, quantity: 1 }]
+      // 3. If brand new, add it capped at available stock
+      const initialQty = Math.min(quantityToAdd, maxStock)
+      return [...prevCart, { ...product, quantity: initialQty }]
     })
   }
 
-  // Adjust quantity (+1 or -1) from inside the Cart Drawer
+  // Handle 'Buy Now' from product detail: add item to cart, close detail modal, open checkout
+  const handleBuyNow = (product, quantity = 1) => {
+    handleAddToCart(product, quantity)
+    setSelectedProduct(null)
+    setIsCheckoutOpen(true)
+  }
+
+  // Adjust quantity (+1 or -1) from inside the Cart Drawer with stock limits
   const handleUpdateQuantity = (productId, delta) => {
     setCart((prevCart) =>
       prevCart
         .map((item) => {
           if (item.id === productId) {
+            // Guard: If increasing and already at max stock, do not increase
+            if (delta > 0 && item.stock !== undefined && item.quantity >= item.stock) {
+              return item
+            }
             const newQty = item.quantity + delta
             return newQty > 0 ? { ...item, quantity: newQty } : null
           }
@@ -233,6 +252,7 @@ export default function App() {
                   key={product.id}
                   product={product}
                   onAddToCart={handleAddToCart}
+                  onViewDetails={setSelectedProduct}
                 />
               ))}
             </div>
@@ -267,6 +287,16 @@ export default function App() {
           cart={cart}
           onClose={() => setIsCheckoutOpen(false)}
           onOrderSuccess={handleOrderSuccess}
+        />
+      )}
+
+      {/* Product Detail "Quick View" Modal */}
+      {selectedProduct && (
+        <ProductDetailModal
+          product={selectedProduct}
+          onClose={() => setSelectedProduct(null)}
+          onAddToCart={handleAddToCart}
+          onBuyNow={handleBuyNow}
         />
       )}
     </div>

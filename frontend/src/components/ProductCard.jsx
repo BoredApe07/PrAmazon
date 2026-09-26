@@ -8,7 +8,7 @@ import './ProductCard.css'
  * @param {Object} props.product - The product object from FastAPI
  * @param {Function} [props.onAddToCart] - Optional callback when 'Add to Cart' is clicked
  */
-export default function ProductCard({ product, onAddToCart }) {
+export default function ProductCard({ product, onAddToCart, onViewDetails }) {
   // Format price into Indian Rupees format (e.g. 24,990 -> ₹24,990.00 or ₹24,990)
   const formattedPrice = new Intl.NumberFormat('en-IN', {
     style: 'currency',
@@ -17,7 +17,12 @@ export default function ProductCard({ product, onAddToCart }) {
   }).format(product.price)
 
   return (
-    <div className="product-card">
+    <div 
+      className="product-card"
+      onClick={() => onViewDetails && onViewDetails(product)}
+      role="button"
+      tabIndex={0}
+    >
       <div className="product-card-image-container">
         <img 
           src={product.image_url} 
@@ -36,16 +41,24 @@ export default function ProductCard({ product, onAddToCart }) {
         <div className="product-card-rating">
           <span className="star-icon">★</span>
           <span className="rating-value">{product.rating}</span>
-          <span className="rating-count">({Math.floor(product.rating * 42)})</span>
+          <span className="rating-count">
+            ({product.rating_count ? product.rating_count.toLocaleString('en-IN') : '0'})
+          </span>
         </div>
 
         <div className="product-card-footer">
           <span className="product-card-price">{formattedPrice}</span>
           <button 
             className="add-to-cart-btn"
-            onClick={() => onAddToCart && onAddToCart(product)}
+            disabled={product.stock <= 0}
+            onClick={(e) => {
+              e.stopPropagation() // Stop card click from triggering the modal!
+              if (product.stock > 0) {
+                onAddToCart && onAddToCart(product)
+              }
+            }}
           >
-            Add to Cart
+            {product.stock <= 0 ? 'Out of Stock' : 'Add to Cart'}
           </button>
         </div>
       </div>

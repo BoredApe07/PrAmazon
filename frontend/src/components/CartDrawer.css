@@ -210,9 +210,23 @@
   transition: background 0.15s ease;
 }
 
-.qty-btn:hover {
+.qty-btn:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.12);
   color: var(--accent-gold);
+}
+
+.qty-btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.cart-max-stock-warning {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #f59e0b;
+  margin-top: 0.4rem;
+  line-height: 1.2;
 }
 
 .qty-number {

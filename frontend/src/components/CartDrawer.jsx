@@ -85,8 +85,13 @@ export default function CartDrawer({
                         <span className="qty-number">{item.quantity}</span>
                         <button
                           className="qty-btn"
+                          disabled={item.stock !== undefined && item.quantity >= item.stock}
                           onClick={() => onUpdateQuantity(item.id, 1)}
-                          title="Increase quantity"
+                          title={
+                            item.stock !== undefined && item.quantity >= item.stock
+                              ? `Maximum stock (${item.stock}) reached`
+                              : "Increase quantity"
+                          }
                         >
                           +
                         </button>
@@ -100,6 +105,12 @@ export default function CartDrawer({
                         Delete
                       </button>
                     </div>
+
+                    {item.stock !== undefined && item.quantity >= item.stock && (
+                      <span className="cart-max-stock-warning">
+                        Max available quantity reached ({item.stock} in stock)
+                      </span>
+                    )}
                   </div>
 
                   <div className="cart-item-subtotal">
