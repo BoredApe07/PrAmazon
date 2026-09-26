@@ -153,6 +153,16 @@
   background: #1f2937;
   flex-shrink: 0;
   border: 1px solid var(--border);
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.cart-item-image.clickable {
+  cursor: pointer;
+}
+
+.cart-item-image.clickable:hover {
+  transform: scale(1.05);
+  border-color: rgba(255, 153, 0, 0.6);
 }
 
 .cart-item-details {
@@ -172,6 +182,16 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  transition: color 0.15s ease;
+}
+
+.cart-item-title.clickable {
+  cursor: pointer;
+}
+
+.cart-item-title.clickable:hover {
+  color: var(--accent-gold);
+  text-decoration: underline;
 }
 
 .cart-item-unit-price {

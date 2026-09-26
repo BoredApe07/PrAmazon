@@ -9,7 +9,7 @@ import './OrdersModal.css'
  * @param {Object} props
  * @param {Function} props.onClose - Callback to close the modal
  */
-export default function OrdersModal({ onClose }) {
+export default function OrdersModal({ onClose, onViewProduct }) {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -235,6 +235,7 @@ export default function OrdersModal({ onClose }) {
                   formatDate={formatDate} 
                   onCancelOrder={handleCancelOrder}
                   cancellingId={cancellingId}
+                  onViewProduct={onViewProduct}
                 />
               ))}
             </div>
@@ -248,7 +249,7 @@ export default function OrdersModal({ onClose }) {
 /**
  * Subcomponent to render a single Amazon-style order card
  */
-function OrderCard({ order, formatINR, formatDate, onCancelOrder, cancellingId }) {
+function OrderCard({ order, formatINR, formatDate, onCancelOrder, cancellingId, onViewProduct }) {
   const isCancelled = order.status === 'cancelled'
 
   return (
@@ -313,7 +314,12 @@ function OrderCard({ order, formatINR, formatDate, onCancelOrder, cancellingId }
         {/* Purchased Items List */}
         <div className="order-items-container">
           {order.items.map((item) => (
-            <div key={item.id} className="order-item-row">
+            <div 
+              key={item.id} 
+              className={`order-item-row ${onViewProduct ? 'clickable' : ''}`}
+              onClick={() => onViewProduct && onViewProduct(item.product_id)}
+              title="Click to view product details"
+            >
               {item.product_image_url ? (
                 <img
                   src={item.product_image_url}

@@ -24,6 +24,17 @@ export const fetchProducts = async (category = '', search = '') => {
 }
 
 /**
+ * Fetch a single product by its unique database ID.
+ */
+export const fetchProductById = async (productId) => {
+  const response = await fetch(`${API_BASE_URL}/products/${productId}`)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch product: ${response.status}`)
+  }
+  return await response.json()
+}
+
+/**
  * Fetch unique product categories from FastAPI.
  */
 export const fetchCategories = async () => {

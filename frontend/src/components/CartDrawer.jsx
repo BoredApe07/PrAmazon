@@ -16,6 +16,7 @@ export default function CartDrawer({
   onUpdateQuantity,
   onRemoveItem,
   onOpenCheckout,
+  onViewProduct,
 }) {
   // Calculate subtotal
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
@@ -63,11 +64,19 @@ export default function CartDrawer({
                   <img
                     src={item.image_url}
                     alt={item.title}
-                    className="cart-item-image"
+                    className="cart-item-image clickable"
+                    onClick={() => onViewProduct && onViewProduct(item.id)}
+                    title="Click to view product details"
                   />
 
                   <div className="cart-item-details">
-                    <h4 className="cart-item-title">{item.title}</h4>
+                    <h4 
+                      className="cart-item-title clickable"
+                      onClick={() => onViewProduct && onViewProduct(item.id)}
+                      title="Click to view product details"
+                    >
+                      {item.title}
+                    </h4>
                     <span className="cart-item-unit-price">
                       {formatINR(item.price)} each
                     </span>

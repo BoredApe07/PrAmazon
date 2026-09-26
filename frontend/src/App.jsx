@@ -5,7 +5,7 @@ import CartDrawer from './components/CartDrawer'
 import CheckoutModal from './components/CheckoutModal'
 import ProductDetailModal from './components/ProductDetailModal'
 import OrdersModal from './components/OrdersModal'
-import { fetchProducts, fetchCategories } from './services/api'
+import { fetchProducts, fetchCategories, fetchProductById } from './services/api'
 import './App.css'
 
 export default function App() {
@@ -102,6 +102,23 @@ export default function App() {
     handleAddToCart(product, quantity)
     setSelectedProduct(null)
     setIsCheckoutOpen(true)
+  }
+
+  // Handle viewing product details when clicking an item from Cart Drawer or Returns & Orders
+  const handleViewProduct = async (productId) => {
+    try {
+      let product = products.find((p) => p.id === productId)
+      if (!product) {
+        product = await fetchProductById(productId)
+      }
+      if (product) {
+        setIsCartOpen(false)   // Close cart drawer if open
+        setIsOrdersOpen(false) // Close orders modal if open
+        setSelectedProduct(product)
+      }
+    } catch (err) {
+      console.error('Failed to load product details:', err)
+    }
   }
 
   // Adjust quantity (+1 or -1) from inside the Cart Drawer with stock limits
@@ -290,6 +307,7 @@ export default function App() {
             setIsCartOpen(false)
             setIsCheckoutOpen(true)
           }}
+          onViewProduct={handleViewProduct}
         />
       )}
 
@@ -314,7 +332,10 @@ export default function App() {
 
       {/* Returns & Orders Modal */}
       {isOrdersOpen && (
-        <OrdersModal onClose={() => setIsOrdersOpen(false)} />
+        <OrdersModal 
+          onClose={() => setIsOrdersOpen(false)} 
+          onViewProduct={handleViewProduct}
+        />
       )}
     </div>
   )

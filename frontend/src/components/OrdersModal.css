@@ -416,6 +416,27 @@
   border-bottom: none;
 }
 
+.order-item-row.clickable {
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 0.5rem;
+  margin: 0 -0.5rem;
+  transition: all 0.15s ease;
+}
+
+.order-item-row.clickable:hover {
+  background-color: #f8fafc;
+}
+
+.order-item-row.clickable:hover .order-item-name {
+  color: #0284c7;
+  text-decoration: underline;
+}
+
+.order-item-row.clickable:hover .order-item-thumb {
+  transform: scale(1.06);
+}
+
 .order-item-thumb {
   width: 52px;
   height: 52px;
