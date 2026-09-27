@@ -6,6 +6,7 @@ import CheckoutModal from './components/CheckoutModal'
 import ProductDetailModal from './components/ProductDetailModal'
 import OrdersModal from './components/OrdersModal'
 import AuthModal from './components/AuthModal'
+import AdminProductModal from './components/AdminProductModal'
 import { fetchProducts, fetchCategories, fetchProductById, fetchCurrentUser } from './services/api'
 import './App.css'
 
@@ -42,6 +43,7 @@ export default function App() {
     }
   })
   const [isAuthOpen, setIsAuthOpen] = useState(false)
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false)
   const [pendingCheckout, setPendingCheckout] = useState(false)
 
   // Verify and refresh auth session on startup using saved JWT
@@ -81,6 +83,7 @@ export default function App() {
     setCurrentUser(null)
     setIsOrdersOpen(false)
     setIsCheckoutOpen(false)
+    setIsAdminModalOpen(false)
   }
 
   // Save cart to localStorage whenever it changes
@@ -92,18 +95,25 @@ export default function App() {
     }
   }, [cart])
 
-  // Fetch unique categories once on startup
-  useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        const data = await fetchCategories()
-        setCategories(data)
-      } catch (err) {
-        console.error('Failed to load categories:', err)
-      }
+  // Fetch unique categories
+  const loadCategories = async () => {
+    try {
+      const data = await fetchCategories()
+      setCategories(data)
+    } catch (err) {
+      console.error('Failed to load categories:', err)
     }
+  }
+
+  useEffect(() => {
     loadCategories()
   }, [])
+
+  // Handle new product added by admin
+  const handleProductCreated = () => {
+    loadProducts()
+    loadCategories()
+  }
 
   // Fetch products whenever selectedCategory OR searchTerm changes
   const loadProducts = async () => {
@@ -288,6 +298,19 @@ export default function App() {
               </button>
             )}
 
+            {/* Admin Add Product Button (Only visible to admin role) */}
+            {currentUser?.role === 'admin' && (
+              <button
+                type="button"
+                className="admin-nav-btn"
+                onClick={() => setIsAdminModalOpen(true)}
+                title="Add a new product to store catalog"
+              >
+                <span className="admin-nav-icon">⚡</span>
+                <span>Add Product</span>
+              </button>
+            )}
+
             {/* Returns & Orders Button */}
             <button 
               className="orders-nav-btn"
@@ -447,6 +470,15 @@ export default function App() {
         <AuthModal
           onClose={() => setIsAuthOpen(false)}
           onLoginSuccess={handleLoginSuccess}
+        />
+      )}
+
+      {/* Admin Add Product Modal */}
+      {isAdminModalOpen && (
+        <AdminProductModal
+          categories={categories}
+          onClose={() => setIsAdminModalOpen(false)}
+          onProductCreated={handleProductCreated}
         />
       )}
     </div>

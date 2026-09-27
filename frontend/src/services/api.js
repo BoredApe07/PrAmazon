@@ -73,6 +73,42 @@ export const fetchCategories = async () => {
 }
 
 /**
+ * Create a new product in the store catalog (Administrator only).
+ * 
+ * @param {Object} productData
+ * @param {string} productData.title
+ * @param {number} productData.price
+ * @param {string} productData.category
+ * @param {number} productData.stock
+ * @param {string} [productData.description]
+ * @param {string} [productData.image_url]
+ * @param {string} [token] - Optional JWT token. If omitted, reads from localStorage.
+ */
+export const createProduct = async (productData, token = null) => {
+  const authToken = token || localStorage.getItem('pramazon_token')
+  if (!authToken) {
+    throw new Error('Please sign in as an Administrator to add products.')
+  }
+
+  const response = await fetch(`${API_BASE_URL}/products/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${authToken}`,
+    },
+    body: JSON.stringify(productData),
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => null)
+    const message = extractErrorMessage(errorData, `Failed to create product: ${response.status}`)
+    throw new Error(message)
+  }
+
+  return await response.json()
+}
+
+/**
  * Place a new order with customer shipping address and items.
  * 
  * @param {Object} orderData
@@ -185,6 +221,37 @@ export const cancelOrder = async (orderId, token = null) => {
   if (!response.ok) {
     const errorData = await response.json().catch(() => null)
     const message = extractErrorMessage(errorData, `Failed to cancel order: ${response.status}`)
+    throw new Error(message)
+  }
+
+  return await response.json()
+}
+
+/**
+ * Update the delivery and fulfillment status of an order (Administrator only).
+ * 
+ * @param {number} orderId
+ * @param {string} status - 'confirmed', 'shipped', 'out_for_delivery', 'delivered'
+ * @param {string} [token] - Optional JWT token
+ */
+export const updateOrderStatus = async (orderId, status, token = null) => {
+  const authToken = token || localStorage.getItem('pramazon_token')
+  if (!authToken) {
+    throw new Error('Please sign in as an Administrator to update order status.')
+  }
+
+  const response = await fetch(`${API_BASE_URL}/orders/${orderId}/status`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${authToken}`,
+    },
+    body: JSON.stringify({ status }),
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => null)
+    const message = extractErrorMessage(errorData, `Failed to update status: ${response.status}`)
     throw new Error(message)
   }
 

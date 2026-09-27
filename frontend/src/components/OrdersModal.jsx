@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { fetchOrders, cancelOrder } from '../services/api'
+import { fetchOrders, cancelOrder, updateOrderStatus } from '../services/api'
 import './OrdersModal.css'
 
 /**
@@ -18,6 +18,22 @@ export default function OrdersModal({ onClose, onViewProduct, currentUser, onOrd
   const [searchTerm, setSearchTerm] = useState('')
   const [cancellingId, setCancellingId] = useState(null)
   const [cancelNotice, setCancelNotice] = useState(null)
+  const [updatingStatusId, setUpdatingStatusId] = useState(null)
+
+  // Handle status update by administrator
+  const handleStatusChange = async (orderId, newStatus) => {
+    setUpdatingStatusId(orderId)
+    try {
+      const updatedOrder = await updateOrderStatus(orderId, newStatus)
+      setOrders((prev) =>
+        prev.map((o) => (o.id === orderId ? updatedOrder : o))
+      )
+    } catch (err) {
+      alert(err.message || 'Failed to update order status')
+    } finally {
+      setUpdatingStatusId(null)
+    }
+  }
 
   // Handle cancel order with confirmation
   const handleCancelOrder = async (orderId) => {
@@ -235,6 +251,9 @@ export default function OrdersModal({ onClose, onViewProduct, currentUser, onOrd
                   onCancelOrder={handleCancelOrder}
                   cancellingId={cancellingId}
                   onViewProduct={onViewProduct}
+                  currentUser={currentUser}
+                  onStatusChange={handleStatusChange}
+                  updatingStatusId={updatingStatusId}
                 />
               ))}
             </div>
@@ -246,10 +265,25 @@ export default function OrdersModal({ onClose, onViewProduct, currentUser, onOrd
 }
 
 /**
- * Subcomponent to render a single Amazon-style order card
+ * Subcomponent to render a single Amazon-style order card with visual tracking
  */
-function OrderCard({ order, formatINR, formatDate, onCancelOrder, cancellingId, onViewProduct }) {
+function OrderCard({
+  order,
+  formatINR,
+  formatDate,
+  onCancelOrder,
+  cancellingId,
+  onViewProduct,
+  currentUser,
+  onStatusChange,
+  updatingStatusId,
+}) {
   const isCancelled = order.status === 'cancelled'
+  const isDelivered = order.status === 'delivered'
+
+  // Map fulfillment stage
+  const stages = ['confirmed', 'shipped', 'out_for_delivery', 'delivered']
+  const stageIndex = stages.indexOf(order.status)
 
   return (
     <div className="order-card">
@@ -283,16 +317,47 @@ function OrderCard({ order, formatINR, formatDate, onCancelOrder, cancellingId, 
               <span className="status-dot red">●</span>
               <span className="status-text">Cancelled — Refund not applicable (Cash on Delivery)</span>
             </div>
+          ) : isDelivered ? (
+            <div className="status-badge-group delivered">
+              <span className="status-dot green">✓</span>
+              <span className="status-text">Delivered — Package handed to customer</span>
+            </div>
           ) : (
-            <div className="status-badge-group confirmed">
-              <span className="status-dot">●</span>
-              <span className="status-text">Confirmed — Preparing for Dispatch</span>
+            <div className="status-badge-group in-transit">
+              <span className="status-dot blue">●</span>
+              <span className="status-text">
+                {order.status === 'shipped'
+                  ? 'Shipped — Package is in transit'
+                  : order.status === 'out_for_delivery'
+                  ? 'Out for Delivery — Arriving today'
+                  : 'Confirmed — Preparing for Dispatch'}
+              </span>
             </div>
           )}
 
           <div className="order-actions-group">
             <span className="payment-tag">Cash on Delivery</span>
-            {!isCancelled && onCancelOrder && (
+
+            {/* Admin Status Fulfillment Dropdown */}
+            {currentUser?.role === 'admin' && !isCancelled && (
+              <div className="admin-status-control" title="Administrator fulfillment action">
+                <span className="admin-status-prefix">⚡ Status:</span>
+                <select
+                  className="admin-status-select"
+                  value={order.status}
+                  onChange={(e) => onStatusChange(order.id, e.target.value)}
+                  disabled={updatingStatusId === order.id}
+                >
+                  <option value="confirmed">Confirmed</option>
+                  <option value="shipped">Shipped</option>
+                  <option value="out_for_delivery">Out for Delivery</option>
+                  <option value="delivered">Delivered</option>
+                </select>
+                {updatingStatusId === order.id && <span className="status-mini-spinner"></span>}
+              </div>
+            )}
+
+            {!isCancelled && !isDelivered && onCancelOrder && (
               <button
                 type="button"
                 className="cancel-order-btn"
@@ -305,6 +370,43 @@ function OrderCard({ order, formatINR, formatDate, onCancelOrder, cancellingId, 
             )}
           </div>
         </div>
+
+        {/* Amazon-style 4-Step Package Tracking Progress Bar */}
+        {!isCancelled && (
+          <div className="tracking-timeline-box">
+            <div className="tracking-timeline">
+              {/* Step 1: Ordered */}
+              <div className={`tracking-step ${stageIndex >= 0 ? 'completed' : ''} ${stageIndex === 0 ? 'active' : ''}`}>
+                <div className="tracking-node">{stageIndex >= 0 ? '✓' : '1'}</div>
+                <span className="tracking-node-title">Ordered</span>
+              </div>
+
+              <div className={`tracking-bar-segment ${stageIndex >= 1 ? 'filled' : ''}`}></div>
+
+              {/* Step 2: Shipped */}
+              <div className={`tracking-step ${stageIndex >= 1 ? 'completed' : ''} ${stageIndex === 1 ? 'active' : ''}`}>
+                <div className="tracking-node">{stageIndex >= 1 ? '✓' : '2'}</div>
+                <span className="tracking-node-title">Shipped</span>
+              </div>
+
+              <div className={`tracking-bar-segment ${stageIndex >= 2 ? 'filled' : ''}`}></div>
+
+              {/* Step 3: Out for Delivery */}
+              <div className={`tracking-step ${stageIndex >= 2 ? 'completed' : ''} ${stageIndex === 2 ? 'active' : ''}`}>
+                <div className="tracking-node">{stageIndex >= 2 ? '✓' : '3'}</div>
+                <span className="tracking-node-title">Out for Delivery</span>
+              </div>
+
+              <div className={`tracking-bar-segment ${stageIndex >= 3 ? 'filled' : ''}`}></div>
+
+              {/* Step 4: Delivered */}
+              <div className={`tracking-step ${stageIndex >= 3 ? 'completed' : ''} ${stageIndex === 3 ? 'active' : ''}`}>
+                <div className="tracking-node">{stageIndex >= 3 ? '✓' : '4'}</div>
+                <span className="tracking-node-title">Delivered</span>
+              </div>
+            </div>
+          </div>
+        )}
 
         <p className="order-shipping-summary">
           <strong>Delivery Address:</strong> {order.shipping_address}

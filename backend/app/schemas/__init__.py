@@ -2,6 +2,7 @@ from app.schemas.product import ProductCreate, ProductResponse, ProductBase
 from app.schemas.order import (
     OrderCreate,
     OrderResponse,
+    OrderStatusUpdate,
     OrderItemCreate,
     OrderItemResponse,
 )
@@ -18,6 +19,7 @@ __all__ = [
     "ProductBase",
     "OrderCreate",
     "OrderResponse",
+    "OrderStatusUpdate",
     "OrderItemCreate",
     "OrderItemResponse",
     "UserCreate",

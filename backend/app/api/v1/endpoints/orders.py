@@ -4,8 +4,8 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.models import Product, Order, OrderItem, User
-from app.schemas import OrderCreate, OrderResponse
-from app.api.deps import get_current_user
+from app.schemas import OrderCreate, OrderResponse, OrderStatusUpdate
+from app.api.deps import get_current_user, get_current_admin
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
@@ -167,4 +167,45 @@ def cancel_order(
     db.refresh(order)
 
     return order
+
+
+VALID_ORDER_STATUSES = {"confirmed", "shipped", "out_for_delivery", "delivered"}
+
+
+@router.put("/{order_id}/status", response_model=OrderResponse)
+def update_order_status(
+    order_id: int,
+    status_update: OrderStatusUpdate,
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Update the fulfillment and delivery status of an order (Administrator only).
+    """
+    new_status = status_update.status.strip().lower()
+    if new_status not in VALID_ORDER_STATUSES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid status '{status_update.status}'. Allowed statuses: {', '.join(sorted(VALID_ORDER_STATUSES))}."
+        )
+
+    order = db.query(Order).filter(Order.id == order_id).first()
+    if not order:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Order #{order_id} was not found."
+        )
+
+    if order.status == "cancelled":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Order #{order_id} is cancelled and cannot have its status updated."
+        )
+
+    order.status = new_status
+    db.commit()
+    db.refresh(order)
+
+    return order
+
 

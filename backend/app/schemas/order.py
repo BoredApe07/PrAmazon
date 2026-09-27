@@ -39,6 +39,13 @@ class OrderCreate(BaseModel):
     items: List[OrderItemCreate] = Field(..., min_length=1, description="At least one item is required to place an order")
 
 
+class OrderStatusUpdate(BaseModel):
+    """
+    Schema for updating order delivery progress (Administrator only).
+    """
+    status: str = Field(..., description="confirmed, shipped, out_for_delivery, delivered, cancelled")
+
+
 class OrderResponse(BaseModel):
     """
     Schema for order confirmation returned to React frontend.

@@ -497,3 +497,146 @@
     align-items: flex-start;
   }
 }
+
+/* Tracking Timeline Styles */
+.tracking-timeline-box {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin: 0.25rem 0;
+}
+
+.tracking-timeline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+}
+
+.tracking-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  position: relative;
+  z-index: 2;
+  flex: 0 0 auto;
+}
+
+.tracking-node {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  border: 2px solid #cbd5e1;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  transition: all 0.25s ease;
+}
+
+.tracking-step.completed .tracking-node {
+  background-color: #0284c7;
+  border-color: #0284c7;
+  color: #ffffff;
+}
+
+.tracking-step.active .tracking-node {
+  background-color: #f59e0b;
+  border-color: #f59e0b;
+  color: #111827;
+  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.25);
+}
+
+.tracking-node-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.tracking-step.completed .tracking-node-title {
+  color: #0f172a;
+}
+
+.tracking-step.active .tracking-node-title {
+  color: #b45309;
+  font-weight: 700;
+}
+
+.tracking-bar-segment {
+  flex: 1;
+  height: 4px;
+  background-color: #e2e8f0;
+  margin: 0 0.5rem;
+  margin-bottom: 1.25rem;
+  border-radius: 2px;
+  transition: background-color 0.25s ease;
+}
+
+.tracking-bar-segment.filled {
+  background-color: #0284c7;
+}
+
+/* Status Badges */
+.status-badge-group.delivered {
+  color: #15803d;
+}
+
+.status-badge-group.in-transit {
+  color: #0284c7;
+}
+
+.status-dot.blue {
+  color: #0284c7;
+}
+
+.status-dot.green {
+  color: #16a34a;
+}
+
+/* Admin Fulfillment Control Bar */
+.admin-status-control {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background-color: #fffbeb;
+  border: 1px solid #fde68a;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+}
+
+.admin-status-prefix {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #b45309;
+}
+
+.admin-status-select {
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  border: 1px solid #d97706;
+  background-color: #ffffff;
+  color: #1f2937;
+  cursor: pointer;
+}
+
+.admin-status-select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.4);
+}
+
+.status-mini-spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(180, 83, 9, 0.3);
+  border-top-color: #b45309;
+  border-radius: 50%;
+  animation: adminSpin 0.6s linear infinite;
+}
