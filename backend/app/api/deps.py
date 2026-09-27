@@ -49,3 +49,19 @@ def get_current_user(
         raise credentials_exception
 
     return user
+
+
+def get_current_admin(
+    current_user: User = Depends(get_current_user)
+) -> User:
+    """
+    FastAPI dependency that restricts endpoint access strictly to Administrators.
+    Raises HTTP 403 Forbidden for regular customers.
+    """
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Administrator privileges required to perform this action."
+        )
+    return current_user
+

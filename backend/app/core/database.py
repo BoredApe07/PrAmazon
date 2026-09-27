@@ -1,4 +1,6 @@
-from sqlalchemy import create_engine
+import sqlite3
+from sqlalchemy import create_engine, event
+from sqlalchemy.engine import Engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 # 1. Database Connection URL
@@ -15,6 +17,16 @@ engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
     connect_args={"check_same_thread": False}
 )
+
+
+# SQLite PRAGMA Listener:
+# Enforces Foreign Key constraints for every SQLite database connection.
+@event.listens_for(Engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    if isinstance(dbapi_connection, sqlite3.Connection):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
 
 # 3. SessionLocal Factory
 # Every time we call SessionLocal(), it gives us a brand new conversation with the DB.

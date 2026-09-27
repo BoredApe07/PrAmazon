@@ -6,6 +6,33 @@
 const API_BASE_URL = 'http://127.0.0.1:8000/api/v1'
 
 /**
+ * Safely extracts a user-readable error message from backend responses.
+ * Handles both plain strings (400, 401, 403, 404) and Pydantic validation lists (422).
+ */
+const extractErrorMessage = (errorData, defaultMessage) => {
+  if (!errorData) return defaultMessage
+
+  // Case 1: FastAPI returned a simple string message
+  if (typeof errorData.detail === 'string') {
+    return errorData.detail
+  }
+
+  // Case 2: FastAPI / Pydantic returned a list of validation errors (422)
+  if (Array.isArray(errorData.detail)) {
+    return errorData.detail
+      .map((item) => item.msg || 'Invalid input')
+      .join(', ')
+  }
+
+  // Case 3: detail is an object with a msg property
+  if (errorData.detail && typeof errorData.detail === 'object') {
+    return errorData.detail.msg || defaultMessage
+  }
+
+  return defaultMessage
+}
+
+/**
  * Fetch products from FastAPI with optional category and search filters.
  */
 export const fetchProducts = async (category = '', search = '') => {
@@ -46,27 +73,31 @@ export const fetchCategories = async () => {
 }
 
 /**
- * Place a new order with customer checkout details and items.
+ * Place a new order with customer shipping address and items.
  * 
  * @param {Object} orderData
- * @param {string} orderData.customer_name
- * @param {string} orderData.customer_email
  * @param {string} orderData.shipping_address
  * @param {Array<{ product_id: number, quantity: number }>} orderData.items
+ * @param {string} [token] - Optional JWT token. If omitted, reads from localStorage.
  */
-export const createOrder = async (orderData) => {
+export const createOrder = async (orderData, token = null) => {
+  const authToken = token || localStorage.getItem('pramazon_token')
+  if (!authToken) {
+    throw new Error('Please sign in to place an order.')
+  }
+
   const response = await fetch(`${API_BASE_URL}/orders/`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'Authorization': `Bearer ${authToken}`,
     },
     body: JSON.stringify(orderData),
   })
 
   if (!response.ok) {
-    // Extract FastAPI detailed error message if available (e.g. "Insufficient stock")
     const errorData = await response.json().catch(() => null)
-    const message = errorData?.detail || `Order failed: ${response.status} ${response.statusText}`
+    const message = extractErrorMessage(errorData, `Order failed: ${response.status} ${response.statusText}`)
     throw new Error(message)
   }
 
@@ -74,14 +105,26 @@ export const createOrder = async (orderData) => {
 }
 
 /**
- * Fetch recent orders, optionally filtered by customer email.
+ * Fetch orders for the currently authenticated user.
+ * 
+ * @param {string} [token] - Optional JWT token. If omitted, reads from localStorage.
  */
-export const fetchOrders = async (email = '') => {
-  const query = email ? `?email=${encodeURIComponent(email)}` : ''
-  const response = await fetch(`${API_BASE_URL}/orders/${query}`)
+export const fetchOrders = async (token = null) => {
+  const authToken = token || localStorage.getItem('pramazon_token')
+  if (!authToken) {
+    throw new Error('Please sign in to view your orders.')
+  }
+
+  const response = await fetch(`${API_BASE_URL}/orders/`, {
+    headers: {
+      'Authorization': `Bearer ${authToken}`,
+    },
+  })
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch orders: ${response.status} ${response.statusText}`)
+    const errorData = await response.json().catch(() => null)
+    const message = extractErrorMessage(errorData, `Failed to fetch orders: ${response.status} ${response.statusText}`)
+    throw new Error(message)
   }
 
   return await response.json()
@@ -89,15 +132,32 @@ export const fetchOrders = async (email = '') => {
 
 /**
  * Fetch a single order by its ID for live tracking/receipt lookup.
+ * 
+ * @param {number} orderId
+ * @param {string} [token] - Optional JWT token. If omitted, reads from localStorage.
  */
-export const fetchOrderById = async (orderId) => {
-  const response = await fetch(`${API_BASE_URL}/orders/${orderId}`)
+export const fetchOrderById = async (orderId, token = null) => {
+  const authToken = token || localStorage.getItem('pramazon_token')
+  if (!authToken) {
+    throw new Error('Please sign in to view this order.')
+  }
+
+  const response = await fetch(`${API_BASE_URL}/orders/${orderId}`, {
+    headers: {
+      'Authorization': `Bearer ${authToken}`,
+    },
+  })
 
   if (!response.ok) {
     if (response.status === 404) {
       throw new Error(`Order #${orderId} was not found. Please verify the Order ID.`)
     }
-    throw new Error(`Failed to fetch order: ${response.status}`)
+    if (response.status === 403) {
+      throw new Error(`You are not authorized to view Order #${orderId}.`)
+    }
+    const errorData = await response.json().catch(() => null)
+    const message = extractErrorMessage(errorData, `Failed to fetch order: ${response.status}`)
+    throw new Error(message)
   }
 
   return await response.json()
@@ -105,15 +165,26 @@ export const fetchOrderById = async (orderId) => {
 
 /**
  * Cancel an order by its ID and restore inventory stock.
+ * 
+ * @param {number} orderId
+ * @param {string} [token] - Optional JWT token. If omitted, reads from localStorage.
  */
-export const cancelOrder = async (orderId) => {
+export const cancelOrder = async (orderId, token = null) => {
+  const authToken = token || localStorage.getItem('pramazon_token')
+  if (!authToken) {
+    throw new Error('Please sign in to cancel this order.')
+  }
+
   const response = await fetch(`${API_BASE_URL}/orders/${orderId}/cancel`, {
     method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${authToken}`,
+    },
   })
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => null)
-    const message = errorData?.detail || `Failed to cancel order: ${response.status}`
+    const message = extractErrorMessage(errorData, `Failed to cancel order: ${response.status}`)
     throw new Error(message)
   }
 
@@ -139,7 +210,7 @@ export const registerUser = async (userData) => {
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => null)
-    const message = errorData?.detail || `Registration failed: ${response.status}`
+    const message = extractErrorMessage(errorData, `Registration failed: ${response.status}`)
     throw new Error(message)
   }
 
@@ -164,7 +235,7 @@ export const loginUser = async (credentials) => {
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => null)
-    const message = errorData?.detail || `Login failed: ${response.status}`
+    const message = extractErrorMessage(errorData, `Login failed: ${response.status}`)
     throw new Error(message)
   }
 
@@ -184,7 +255,9 @@ export const fetchCurrentUser = async (token) => {
   })
 
   if (!response.ok) {
-    throw new Error(`Authentication expired or invalid: ${response.status}`)
+    const errorData = await response.json().catch(() => null)
+    const message = extractErrorMessage(errorData, `Authentication expired or invalid: ${response.status}`)
+    throw new Error(message)
   }
 
   return await response.json()

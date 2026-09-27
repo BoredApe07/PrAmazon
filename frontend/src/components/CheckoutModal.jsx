@@ -13,13 +13,8 @@ import './CheckoutModal.css'
  * @param {Function} props.onOrderSuccess - Callback when order is placed successfully
  */
 export default function CheckoutModal({ cart, onClose, onOrderSuccess, currentUser }) {
-  // Form fields state (prefilled if customer is logged in)
-  const [formData, setFormData] = useState({
-    customer_name: currentUser?.name || '',
-    customer_email: currentUser?.email || '',
-    shipping_address: '',
-  })
-
+  // Delivery address input state
+  const [shippingAddress, setShippingAddress] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(null)
   const [receipt, setReceipt] = useState(null)
@@ -36,24 +31,24 @@ export default function CheckoutModal({ cart, onClose, onOrderSuccess, currentUs
       maximumFractionDigits: 2,
     }).format(amount)
 
-  // Update form fields dynamically
-  const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
-
   // Submit order to FastAPI backend
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (!currentUser) {
+      setError('Please sign in to complete your checkout.')
+      return
+    }
+    if (!shippingAddress.trim()) {
+      setError('Please provide a delivery address.')
+      return
+    }
     setSubmitting(true)
     setError(null)
 
     try {
-      // 1. Prepare items payload (backend requires product_id and quantity)
+      // 1. Prepare clean order payload (user identity is attached via JWT)
       const orderPayload = {
-        customer_name: formData.customer_name.trim(),
-        customer_email: formData.customer_email.trim(),
-        shipping_address: formData.shipping_address.trim(),
+        shipping_address: shippingAddress.trim(),
         items: cart.map((item) => ({
           product_id: item.id,
           quantity: item.quantity,
@@ -107,11 +102,11 @@ export default function CheckoutModal({ cart, onClose, onOrderSuccess, currentUs
                 </div>
                 <div className="receipt-row">
                   <span className="receipt-label">Customer:</span>
-                  <span className="receipt-val">{receipt.customer_name}</span>
+                  <span className="receipt-val">{receipt.user?.name || 'Customer'}</span>
                 </div>
                 <div className="receipt-row">
                   <span className="receipt-label">Email:</span>
-                  <span className="receipt-val">{receipt.customer_email}</span>
+                  <span className="receipt-val">{receipt.user?.email}</span>
                 </div>
                 <div className="receipt-row">
                   <span className="receipt-label">Deliver To:</span>
@@ -158,34 +153,15 @@ export default function CheckoutModal({ cart, onClose, onOrderSuccess, currentUs
                 </div>
               )}
 
-              {/* Customer Full Name */}
-              <div className="form-group">
-                <label htmlFor="customer_name">Full Name *</label>
-                <input
-                  id="customer_name"
-                  type="text"
-                  name="customer_name"
-                  required
-                  placeholder="e.g. Rahul Sharma"
-                  value={formData.customer_name}
-                  onChange={handleChange}
-                  disabled={submitting}
-                />
-              </div>
-
-              {/* Customer Email */}
-              <div className="form-group">
-                <label htmlFor="customer_email">Email Address *</label>
-                <input
-                  id="customer_email"
-                  type="email"
-                  name="customer_email"
-                  required
-                  placeholder="e.g. rahul@example.com"
-                  value={formData.customer_email}
-                  onChange={handleChange}
-                  disabled={submitting}
-                />
+              {/* Deliver-To Customer Info */}
+              <div className="checkout-account-info">
+                <span className="account-info-icon">👤</span>
+                <div>
+                  <div className="account-info-name">
+                    Delivering to: <strong>{currentUser?.name || 'Customer'}</strong>
+                  </div>
+                  <div className="account-info-email">{currentUser?.email}</div>
+                </div>
               </div>
 
               {/* Shipping Address */}
@@ -197,8 +173,8 @@ export default function CheckoutModal({ cart, onClose, onOrderSuccess, currentUs
                   required
                   rows="3"
                   placeholder="House/Flat number, Street name, City, Pincode"
-                  value={formData.shipping_address}
-                  onChange={handleChange}
+                  value={shippingAddress}
+                  onChange={(e) => setShippingAddress(e.target.value)}
                   disabled={submitting}
                 />
               </div>

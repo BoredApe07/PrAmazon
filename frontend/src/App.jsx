@@ -42,6 +42,7 @@ export default function App() {
     }
   })
   const [isAuthOpen, setIsAuthOpen] = useState(false)
+  const [pendingCheckout, setPendingCheckout] = useState(false)
 
   // Verify and refresh auth session on startup using saved JWT
   useEffect(() => {
@@ -66,12 +67,20 @@ export default function App() {
     localStorage.setItem('pramazon_user', JSON.stringify(user))
     setCurrentUser(user)
     setIsAuthOpen(false)
+
+    // Amazon pattern: If user was trying to checkout, immediately open checkout!
+    if (pendingCheckout) {
+      setPendingCheckout(false)
+      setIsCheckoutOpen(true)
+    }
   }
 
   const handleLogout = () => {
     localStorage.removeItem('pramazon_token')
     localStorage.removeItem('pramazon_user')
     setCurrentUser(null)
+    setIsOrdersOpen(false)
+    setIsCheckoutOpen(false)
   }
 
   // Save cart to localStorage whenever it changes
@@ -110,8 +119,13 @@ export default function App() {
     }
   }
 
+  // Fetch products with a 300ms debounce to prevent race conditions while typing
   useEffect(() => {
-    loadProducts()
+    const timer = setTimeout(() => {
+      loadProducts()
+    }, 300)
+
+    return () => clearTimeout(timer)
   }, [selectedCategory, searchTerm])
 
   // Handler to add a product to the cart with quantity tracking and stock limits
@@ -140,11 +154,16 @@ export default function App() {
     })
   }
 
-  // Handle 'Buy Now' from product detail: add item to cart, close detail modal, open checkout
+  // Handle 'Buy Now' from product detail: add item to cart, close detail modal, open checkout (or login if unauthenticated)
   const handleBuyNow = (product, quantity = 1) => {
     handleAddToCart(product, quantity)
     setSelectedProduct(null)
-    setIsCheckoutOpen(true)
+    if (!currentUser) {
+      setPendingCheckout(true)
+      setIsAuthOpen(true)
+    } else {
+      setIsCheckoutOpen(true)
+    }
   }
 
   // Handle viewing product details when clicking an item from Cart Drawer or Returns & Orders
@@ -188,7 +207,7 @@ export default function App() {
     setCart((prevCart) => prevCart.filter((item) => item.id !== productId))
   }
 
-  // Handle successful order placement (clear cart)
+  // Handle successful order placement (clear cart and refresh catalog stock)
   const handleOrderSuccess = () => {
     setCart([])
     try {
@@ -196,6 +215,7 @@ export default function App() {
     } catch (err) {
       console.error('Failed to clear cart:', err)
     }
+    loadProducts()
   }
 
   // Calculate total units (e.g. 2 headphones + 1 laptop = 3 items)
@@ -271,7 +291,13 @@ export default function App() {
             {/* Returns & Orders Button */}
             <button 
               className="orders-nav-btn"
-              onClick={() => setIsOrdersOpen(true)}
+              onClick={() => {
+                if (!currentUser) {
+                  setIsAuthOpen(true)
+                } else {
+                  setIsOrdersOpen(true)
+                }
+              }}
               title="Track packages and view order history"
             >
               <span className="orders-nav-top">Returns</span>
@@ -375,7 +401,12 @@ export default function App() {
           onRemoveItem={handleRemoveItem}
           onOpenCheckout={() => {
             setIsCartOpen(false)
-            setIsCheckoutOpen(true)
+            if (!currentUser) {
+              setPendingCheckout(true)
+              setIsAuthOpen(true)
+            } else {
+              setIsCheckoutOpen(true)
+            }
           }}
           onViewProduct={handleViewProduct}
         />
@@ -407,6 +438,7 @@ export default function App() {
           onClose={() => setIsOrdersOpen(false)} 
           onViewProduct={handleViewProduct}
           currentUser={currentUser}
+          onOrderCancelled={loadProducts}
         />
       )}
 

@@ -2,6 +2,9 @@ from datetime import datetime
 from typing import List, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.schemas.user import UserResponse
+from app.schemas.product import ProductResponse
+
 
 # 1. Order Item Schemas
 class OrderItemCreate(BaseModel):
@@ -16,13 +19,12 @@ class OrderItemCreate(BaseModel):
 class OrderItemResponse(BaseModel):
     """
     Schema for an item returned in the order confirmation response.
+    Relational: Natively embeds the purchased Product details (which includes product.id).
     """
     id: int
-    product_id: int
     quantity: int
     unit_price: float
-    product_title: Optional[str] = "Product"
-    product_image_url: Optional[str] = None
+    product: Optional[ProductResponse] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -31,9 +33,8 @@ class OrderItemResponse(BaseModel):
 class OrderCreate(BaseModel):
     """
     Schema for incoming checkout request from React frontend.
+    Customer identity is derived directly from the authenticated JWT session.
     """
-    customer_name: str = Field(..., min_length=2, description="Customer full name")
-    customer_email: str = Field(..., description="Customer contact email")
     shipping_address: str = Field(..., min_length=5, description="Full delivery address")
     items: List[OrderItemCreate] = Field(..., min_length=1, description="At least one item is required to place an order")
 
@@ -41,14 +42,15 @@ class OrderCreate(BaseModel):
 class OrderResponse(BaseModel):
     """
     Schema for order confirmation returned to React frontend.
+    Relational: Natively embeds the customer User profile (which includes user.id).
     """
     id: int
-    customer_name: str
-    customer_email: str
     shipping_address: str
     total_amount: float
     status: str
     created_at: datetime
+    user: Optional[UserResponse] = None
     items: List[OrderItemResponse]
 
     model_config = ConfigDict(from_attributes=True)
+

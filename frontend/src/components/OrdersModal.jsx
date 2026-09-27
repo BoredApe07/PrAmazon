@@ -9,7 +9,7 @@ import './OrdersModal.css'
  * @param {Object} props
  * @param {Function} props.onClose - Callback to close the modal
  */
-export default function OrdersModal({ onClose, onViewProduct, currentUser }) {
+export default function OrdersModal({ onClose, onViewProduct, currentUser, onOrderCancelled }) {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -33,6 +33,7 @@ export default function OrdersModal({ onClose, onViewProduct, currentUser }) {
         prev.map((o) => (o.id === orderId ? updatedOrder : o))
       )
       setCancelNotice(`Order #${orderId} was cancelled successfully. Stock has been restored.`)
+      onOrderCancelled()
       setTimeout(() => setCancelNotice(null), 4000)
     } catch (err) {
       alert(err.message || 'Failed to cancel order')
@@ -52,14 +53,14 @@ export default function OrdersModal({ onClose, onViewProduct, currentUser }) {
 
   // Load orders on mount (filtered by logged-in user if authenticated)
   useEffect(() => {
-    loadOrders(currentUser?.email || '')
+    loadOrders()
   }, [currentUser])
 
-  const loadOrders = async (emailFilter = currentUser?.email || '') => {
+  const loadOrders = async () => {
     setLoading(true)
     setError(null)
     try {
-      const data = await fetchOrders(emailFilter)
+      const data = await fetchOrders()
       setOrders(data)
     } catch (err) {
       setError(err.message || 'Unable to load orders')
@@ -92,12 +93,10 @@ export default function OrdersModal({ onClose, onViewProduct, currentUser }) {
   const filteredOrders = cleanSearch
     ? orders.filter((order) => {
         const matchesId = order.id.toString() === cleanSearch
-        const matchesEmail = (order.customer_email || '').toLowerCase().includes(cleanSearch)
-        const matchesName = (order.customer_name || '').toLowerCase().includes(cleanSearch)
         const matchesItem = order.items && order.items.some((item) =>
-          (item.product_title || '').toLowerCase().includes(cleanSearch)
+          (item.product?.title || '').toLowerCase().includes(cleanSearch)
         )
-        return matchesId || matchesEmail || matchesName || matchesItem
+        return matchesId || matchesItem
       })
     : orders
 
@@ -131,7 +130,7 @@ export default function OrdersModal({ onClose, onViewProduct, currentUser }) {
             <input
               type="text"
               className="orders-lookup-input"
-              placeholder="Search by Order ID (e.g. 1), email, or product name..."
+              placeholder="Search by Order ID (e.g. 1) or product name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -267,7 +266,7 @@ function OrderCard({ order, formatINR, formatDate, onCancelOrder, cancellingId, 
         <div className="order-meta-col">
           <span className="meta-label">SHIP TO</span>
           <span className="meta-value" title={order.shipping_address}>
-            {order.customer_name}
+            {order.user?.name || 'Customer'}
           </span>
         </div>
         <div className="order-meta-col order-id-col">
@@ -317,20 +316,22 @@ function OrderCard({ order, formatINR, formatDate, onCancelOrder, cancellingId, 
             <div 
               key={item.id} 
               className={`order-item-row ${onViewProduct ? 'clickable' : ''}`}
-              onClick={() => onViewProduct && onViewProduct(item.product_id)}
+              onClick={() => onViewProduct && onViewProduct(item.product?.id)}
               title="Click to view product details"
             >
-              {item.product_image_url ? (
+              {item.product?.image_url ? (
                 <img
-                  src={item.product_image_url}
-                  alt={item.product_title || 'Product'}
+                  src={item.product?.image_url}
+                  alt={item.product?.title || 'Product'}
                   className="order-item-thumb"
                 />
               ) : (
                 <div className="order-item-placeholder">🛍️</div>
               )}
               <div className="order-item-info">
-                <h4 className="order-item-name">{item.product_title || `Product #${item.product_id}`}</h4>
+                <h4 className="order-item-name">
+                  {item.product?.title || `Product #${item.product?.id || ''}`}
+                </h4>
                 <div className="order-item-meta">
                   <span>Qty: <strong>{item.quantity}</strong></span>
                   <span>•</span>

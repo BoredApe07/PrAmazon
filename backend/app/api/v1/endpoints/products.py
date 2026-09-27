@@ -4,7 +4,9 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.models.product import Product
+from app.models.user import User
 from app.schemas.product import ProductCreate, ProductResponse
+from app.api.deps import get_current_admin
 
 # Create the dedicated router for products
 router = APIRouter(prefix="/products", tags=["Products"])
@@ -63,9 +65,13 @@ def get_product_by_id(product_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/", response_model=ProductResponse, status_code=status.HTTP_201_CREATED)
-def create_product(product_in: ProductCreate, db: Session = Depends(get_db)):
+def create_product(
+    product_in: ProductCreate,
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
     """
-    Create a new product in the SQLite database.
+    Create a new product in the SQLite database (Administrator only).
     """
     # 1. Convert Pydantic data into a SQLAlchemy Model instance
     new_product = Product(

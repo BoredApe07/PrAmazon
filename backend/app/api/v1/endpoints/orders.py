@@ -3,38 +3,46 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.models import Product, Order, OrderItem
+from app.models import Product, Order, OrderItem, User
 from app.schemas import OrderCreate, OrderResponse
+from app.api.deps import get_current_user
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
 
 @router.get("/", response_model=List[OrderResponse])
 def list_orders(
-    email: Optional[str] = None,
     limit: int = 20,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
-    List recent orders, optionally filtered by customer email.
-    Orders are returned sorted by newest first.
+    List orders securely for authenticated users:
+    - Customers can ONLY view their own orders (strict isolation).
+    - Administrators can view all orders across the store.
     """
     query = db.query(Order)
-    if email:
-        query = query.filter(Order.customer_email.ilike(f"%{email.strip()}%"))
+    if current_user.role != "admin":
+        query = query.filter(Order.user_id == current_user.id)
+
     return query.order_by(Order.created_at.desc()).limit(limit).all()
 
 
 @router.post("/", response_model=OrderResponse, status_code=status.HTTP_201_CREATED)
-def create_order(order_in: OrderCreate, db: Session = Depends(get_db)):
+def create_order(
+    order_in: OrderCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """
-    Place a new customer order.
+    Place a new customer order for the authenticated user.
     
     1. Validates that every requested product exists in the database.
     2. Validates that sufficient inventory stock is available.
     3. Deducts the purchased quantity from product stock.
     4. Computes the authentic subtotal using verified database prices.
-    5. Creates the Order and OrderItem records in SQLite.
+    5. Links the order directly to the authenticated user's ID.
+    6. Creates the Order and OrderItem records in SQLite.
     """
     total_amount = 0.0
     order_items_to_create = []
@@ -75,8 +83,7 @@ def create_order(order_in: OrderCreate, db: Session = Depends(get_db)):
 
     # 2. Create the main Order record
     db_order = Order(
-        customer_name=order_in.customer_name,
-        customer_email=order_in.customer_email,
+        user_id=current_user.id,
         shipping_address=order_in.shipping_address,
         total_amount=round(total_amount, 2),
         status="confirmed",
@@ -92,30 +99,48 @@ def create_order(order_in: OrderCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/{order_id}", response_model=OrderResponse)
-def get_order_by_id(order_id: int, db: Session = Depends(get_db)):
+def get_order_by_id(
+    order_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """
     Fetch an order receipt by its unique ID.
-    Returns HTTP 404 if the order does not exist.
+    Only the customer who placed the order (or an Administrator) can view it.
     """
-    order = db.query(Order).filter(Order.id == order_id).first()
+    query = db.query(Order).filter(Order.id == order_id)
+    if current_user.role != "admin":
+        query = query.filter(Order.user_id == current_user.id)
+
+    order = query.first()
     if not order:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Order with ID {order_id} was not found."
+            detail=f"Order #{order_id} was not found."
         )
+
     return order
 
 
 @router.put("/{order_id}/cancel", response_model=OrderResponse)
-def cancel_order(order_id: int, db: Session = Depends(get_db)):
+def cancel_order(
+    order_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """
     Cancel an existing order and replenish product inventory stock.
+    Only the customer who placed the order (or an Administrator) can cancel it.
     """
-    order = db.query(Order).filter(Order.id == order_id).first()
+    query = db.query(Order).filter(Order.id == order_id)
+    if current_user.role != "admin":
+        query = query.filter(Order.user_id == current_user.id)
+
+    order = query.first()
     if not order:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Order with ID {order_id} was not found."
+            detail=f"Order #{order_id} was not found."
         )
 
     if order.status == "cancelled":
