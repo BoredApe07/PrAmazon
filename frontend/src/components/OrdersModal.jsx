@@ -9,7 +9,7 @@ import './OrdersModal.css'
  * @param {Object} props
  * @param {Function} props.onClose - Callback to close the modal
  */
-export default function OrdersModal({ onClose, onViewProduct }) {
+export default function OrdersModal({ onClose, onViewProduct, currentUser }) {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -50,16 +50,16 @@ export default function OrdersModal({ onClose, onViewProduct }) {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [onClose])
 
-  // Load all recent orders on mount
+  // Load orders on mount (filtered by logged-in user if authenticated)
   useEffect(() => {
-    loadOrders()
-  }, [])
+    loadOrders(currentUser?.email || '')
+  }, [currentUser])
 
-  const loadOrders = async () => {
+  const loadOrders = async (emailFilter = currentUser?.email || '') => {
     setLoading(true)
     setError(null)
     try {
-      const data = await fetchOrders()
+      const data = await fetchOrders(emailFilter)
       setOrders(data)
     } catch (err) {
       setError(err.message || 'Unable to load orders')

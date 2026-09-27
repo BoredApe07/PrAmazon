@@ -118,6 +118,54 @@
   gap: 1.25rem;
 }
 
+/* Account & Sign-In Nav Button (Amazon Style) */
+.account-nav-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0.35rem 0.65rem;
+  border-radius: 4px;
+  cursor: pointer;
+  line-height: 1.2;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.account-nav-btn:hover {
+  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.account-nav-top {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.account-nav-bottom {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.account-signout-btn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: #ff9900;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.account-signout-btn:hover {
+  color: #ffac33;
+}
+
 /* Returns & Orders Nav Button (Amazon Style) */
 .orders-nav-btn {
   background: transparent;

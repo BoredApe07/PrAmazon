@@ -5,7 +5,8 @@ import CartDrawer from './components/CartDrawer'
 import CheckoutModal from './components/CheckoutModal'
 import ProductDetailModal from './components/ProductDetailModal'
 import OrdersModal from './components/OrdersModal'
-import { fetchProducts, fetchCategories, fetchProductById } from './services/api'
+import AuthModal from './components/AuthModal'
+import { fetchProducts, fetchCategories, fetchProductById, fetchCurrentUser } from './services/api'
 import './App.css'
 
 export default function App() {
@@ -30,6 +31,48 @@ export default function App() {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [isOrdersOpen, setIsOrdersOpen] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState(null)
+
+  // User Authentication state
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const savedUser = localStorage.getItem('pramazon_user')
+      return savedUser ? JSON.parse(savedUser) : null
+    } catch {
+      return null
+    }
+  })
+  const [isAuthOpen, setIsAuthOpen] = useState(false)
+
+  // Verify and refresh auth session on startup using saved JWT
+  useEffect(() => {
+    const token = localStorage.getItem('pramazon_token')
+    if (token) {
+      fetchCurrentUser(token)
+        .then((userData) => {
+          setCurrentUser(userData)
+          localStorage.setItem('pramazon_user', JSON.stringify(userData))
+        })
+        .catch(() => {
+          // Token expired or invalid: clear session cleanly
+          localStorage.removeItem('pramazon_token')
+          localStorage.removeItem('pramazon_user')
+          setCurrentUser(null)
+        })
+    }
+  }, [])
+
+  const handleLoginSuccess = (user, token) => {
+    localStorage.setItem('pramazon_token', token)
+    localStorage.setItem('pramazon_user', JSON.stringify(user))
+    setCurrentUser(user)
+    setIsAuthOpen(false)
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('pramazon_token')
+    localStorage.removeItem('pramazon_user')
+    setCurrentUser(null)
+  }
 
   // Save cart to localStorage whenever it changes
   useEffect(() => {
@@ -198,6 +241,33 @@ export default function App() {
           </div>
 
           <div className="navbar-actions">
+            {/* Account / Sign-In Button */}
+            {currentUser ? (
+              <div className="account-nav-btn user-logged-in" title={`Signed in as ${currentUser.email}`}>
+                <span className="account-nav-top">
+                  Hello, {currentUser.name ? currentUser.name.split(' ')[0] : 'Shopper'}
+                </span>
+                <button
+                  type="button"
+                  className="account-signout-btn"
+                  onClick={handleLogout}
+                  title="Sign out of your account"
+                >
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="account-nav-btn"
+                onClick={() => setIsAuthOpen(true)}
+                title="Sign in to your account"
+              >
+                <span className="account-nav-top">Hello, sign in</span>
+                <span className="account-nav-bottom">Account & Lists</span>
+              </button>
+            )}
+
             {/* Returns & Orders Button */}
             <button 
               className="orders-nav-btn"
@@ -317,6 +387,7 @@ export default function App() {
           cart={cart}
           onClose={() => setIsCheckoutOpen(false)}
           onOrderSuccess={handleOrderSuccess}
+          currentUser={currentUser}
         />
       )}
 
@@ -335,6 +406,15 @@ export default function App() {
         <OrdersModal 
           onClose={() => setIsOrdersOpen(false)} 
           onViewProduct={handleViewProduct}
+          currentUser={currentUser}
+        />
+      )}
+
+      {/* Authentication Modal (Sign In / Register) */}
+      {isAuthOpen && (
+        <AuthModal
+          onClose={() => setIsAuthOpen(false)}
+          onLoginSuccess={handleLoginSuccess}
         />
       )}
     </div>

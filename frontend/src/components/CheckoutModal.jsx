@@ -12,11 +12,11 @@ import './CheckoutModal.css'
  * @param {Function} props.onClose - Callback to close modal
  * @param {Function} props.onOrderSuccess - Callback when order is placed successfully
  */
-export default function CheckoutModal({ cart, onClose, onOrderSuccess }) {
-  // Form fields state
+export default function CheckoutModal({ cart, onClose, onOrderSuccess, currentUser }) {
+  // Form fields state (prefilled if customer is logged in)
   const [formData, setFormData] = useState({
-    customer_name: '',
-    customer_email: '',
+    customer_name: currentUser?.name || '',
+    customer_email: currentUser?.email || '',
     shipping_address: '',
   })
 

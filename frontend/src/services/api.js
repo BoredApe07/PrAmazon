@@ -120,3 +120,73 @@ export const cancelOrder = async (orderId) => {
   return await response.json()
 }
 
+/**
+ * Register a new customer account.
+ * 
+ * @param {Object} userData
+ * @param {string} userData.name
+ * @param {string} userData.email
+ * @param {string} userData.password
+ */
+export const registerUser = async (userData) => {
+  const response = await fetch(`${API_BASE_URL}/auth/register`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(userData),
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => null)
+    const message = errorData?.detail || `Registration failed: ${response.status}`
+    throw new Error(message)
+  }
+
+  return await response.json()
+}
+
+/**
+ * Authenticate customer credentials and retrieve JWT token.
+ * 
+ * @param {Object} credentials
+ * @param {string} credentials.email
+ * @param {string} credentials.password
+ */
+export const loginUser = async (credentials) => {
+  const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(credentials),
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => null)
+    const message = errorData?.detail || `Login failed: ${response.status}`
+    throw new Error(message)
+  }
+
+  return await response.json()
+}
+
+/**
+ * Fetch the currently logged-in user's profile using their saved JWT token.
+ * 
+ * @param {string} token - The Bearer JWT access token
+ */
+export const fetchCurrentUser = async (token) => {
+  const response = await fetch(`${API_BASE_URL}/auth/me`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  })
+
+  if (!response.ok) {
+    throw new Error(`Authentication expired or invalid: ${response.status}`)
+  }
+
+  return await response.json()
+}
+
