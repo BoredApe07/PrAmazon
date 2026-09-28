@@ -188,8 +188,87 @@ CUSTOMER_NAMES = [
 ]
 
 
+CORE_PRODUCTS = [
+    {
+        "title": "Sony WH-1000XM4 Wireless Noise-Canceling Headphones",
+        "description": "Industry-leading noise canceling with Dual Noise Sensor technology. Up to 30-hour battery life with quick charging. Touch Sensor controls to pause/play/skip tracks.",
+        "price": 24990.0,
+        "category": "Electronics",
+        "image_url": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&q=80",
+        "rating": 4.8,
+        "rating_count": 14820,
+        "stock": 18
+    },
+    {
+        "title": "Apple MacBook Air 13.6-Inch (M2 Chip)",
+        "description": "Strikingly thin design with 8-core CPU, 8GB unified memory, and 256GB SSD storage. Up to 18 hours of battery life with liquid retina display.",
+        "price": 99900.0,
+        "category": "Electronics",
+        "image_url": "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=600&q=80",
+        "rating": 4.9,
+        "rating_count": 8940,
+        "stock": 3
+    },
+    {
+        "title": "Nespresso VertuoPlus Coffee and Espresso Machine",
+        "description": "Single-serve coffee maker with Centrifusion technology. Brews 4 cup sizes at the touch of a button with precision brewing.",
+        "price": 14999.0,
+        "category": "Home & Kitchen",
+        "image_url": "https://images.unsplash.com/photo-1517668808822-9ebb02f2a0e6?w=600&q=80",
+        "rating": 4.6,
+        "rating_count": 3215,
+        "stock": 18
+    },
+    {
+        "title": "Nike Air Zoom Pegasus 40 Running Shoes",
+        "description": "Responsive cushioning and neutral support engineered for daily runs. Breathable engineered mesh upper with React foam technology.",
+        "price": 9995.0,
+        "category": "Fashion",
+        "image_url": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&q=80",
+        "rating": 4.4,
+        "rating_count": 1050,
+        "stock": 0
+    },
+    {
+        "title": "Osprey Daylite Everyday Commuter Backpack",
+        "description": "Lightweight, versatile daypack with dual side mesh pockets and interior sleeve for tablet or hydration pack. Spacemesh harness with integrated handle.",
+        "price": 4499.0,
+        "category": "Fashion",
+        "image_url": "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&q=80",
+        "rating": 4.7,
+        "rating_count": 642,
+        "stock": 4
+    },
+    {
+        "title": "The Pragmatic Programmer (20th Anniversary Edition)",
+        "description": "Your journey to mastery. One of the most influential software development books ever written, packed with practical advice for modern engineers.",
+        "price": 1850.0,
+        "category": "Books",
+        "image_url": "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&q=80",
+        "rating": 4.9,
+        "rating_count": 5120,
+        "stock": 45
+    },
+    {
+        "title": "Apple iPad Air M2 (11-inch)",
+        "description": "Supercharged by the Apple M2 chip with Liquid Retina display.",
+        "price": 59900.0,
+        "category": "Electronics",
+        "image_url": "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=600&auto=format&fit=crop&q=80",
+        "rating": 4.5,
+        "rating_count": 100,
+        "stock": 12
+    }
+]
+
+
 def seed_database(target_products: int = 1000, target_orders: int = 5000):
     start_time = time.time()
+
+    # Ensure tables exist in PostgreSQL
+    print("[0/4] Initializing database tables if not present...")
+    Base.metadata.create_all(bind=engine)
+
     db = SessionLocal()
 
     print("=" * 70)
@@ -225,6 +304,17 @@ def seed_database(target_products: int = 1000, target_orders: int = 5000):
             db.commit()
             existing_users["demo@pramazon.com"] = demo_user
 
+        if "pramukhjain0@gmail.com" not in existing_users:
+            p_user = User(
+                name="Pramukh",
+                email="pramukhjain0@gmail.com",
+                hashed_password=hash_password("demo123"),
+                role="customer"
+            )
+            db.add(p_user)
+            db.commit()
+            existing_users["pramukhjain0@gmail.com"] = p_user
+
         # Create additional realistic customer personas for order diversity
         customer_users = [u for u in existing_users.values() if u.role == "customer"]
         while len(customer_users) < 10:
@@ -254,6 +344,12 @@ def seed_database(target_products: int = 1000, target_orders: int = 5000):
 
         if needed_products > 0:
             product_records = []
+
+            # If brand new catalog, insert the 7 iconic core products first
+            if existing_products_count == 0:
+                product_records.extend(CORE_PRODUCTS)
+                needed_products = max(0, target_products - len(product_records))
+
             category_keys = list(CATEGORY_DATA.keys())
 
             for i in range(needed_products):

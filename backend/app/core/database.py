@@ -1,43 +1,27 @@
-import os
-from pathlib import Path
-import sqlite3
-from sqlalchemy import create_engine, event
-from sqlalchemy.engine import Engine
+from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
+from app.core.config import settings
+
 # 1. Database Connection URL
-# Resolved to absolute path in the backend folder so scripts and uvicorn share the exact same DB
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
-DB_FILE = BASE_DIR / "pramazon.db"
-SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{DB_FILE.as_posix()}")
+# Connects to Neon Serverless PostgreSQL via PgBouncer pooled URL for high concurrency
+DATABASE_URL = settings.DATABASE_URL_POOLED or settings.DATABASE_URL
 
 # 2. Database Engine
-# Manages the actual low-level connection to the 'pramazon.db' file.
-# 'check_same_thread=False' is needed ONLY for SQLite because FastAPI handles
-# multiple web requests across different threads.
+# pool_pre_ping=True: Tests connection health before using it, preventing stale connection errors
+# pool_recycle=300: Recycles connections every 5 minutes to maintain reliability with cloud firewalls
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False}
+    DATABASE_URL,
+    pool_pre_ping=True,
+    pool_recycle=300,
 )
 
-
-# SQLite PRAGMA Listener:
-# Enforces Foreign Key constraints for every SQLite database connection.
-@event.listens_for(Engine, "connect")
-def set_sqlite_pragma(dbapi_connection, connection_record):
-    if isinstance(dbapi_connection, sqlite3.Connection):
-        cursor = dbapi_connection.cursor()
-        cursor.execute("PRAGMA foreign_keys=ON")
-        cursor.execute("PRAGMA journal_mode=WAL")
-        cursor.execute("PRAGMA busy_timeout=30000")
-        cursor.close()
-
 # 3. SessionLocal Factory
-# Every time we call SessionLocal(), it gives us a brand new conversation with the DB.
+# Gives every request a fresh, isolated conversation with PostgreSQL
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # 4. Declarative Base
-# All our database models (Product, User, Order) will inherit from this Base class.
+# All database models (Product, User, Order, OrderItem) inherit from this Base
 Base = declarative_base()
 
 

@@ -1,22 +1,31 @@
 import os
-from pydantic_settings import BaseSettings # type: ignore
+from pathlib import Path
+from pydantic_settings import BaseSettings  # type: ignore
+
+# Ensure .env is always located inside the backend directory
+BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
+ENV_PATH = BACKEND_DIR / ".env"
 
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "PrAmazon"
     API_V1_STR: str = "/api/v1"
-    
-    # 32+ bytes cryptographic secret key for signing JWT tokens
-    SECRET_KEY: str = os.getenv(
-        "SECRET_KEY", 
-        "pramazon_super_secret_jwt_key_2026_production_grade_32_bytes_min"
-    )
+
+    # PostgreSQL Database Connection Strings
+    # Strictly loaded from .env - NEVER hardcode credentials in source code!
+    DATABASE_URL: str = ""
+    DATABASE_URL_POOLED: str = ""
+
+    # Cryptographic JWT Security Settings
+    # Strictly loaded from .env - NEVER hardcode secret keys in source code!
+    SECRET_KEY: str = ""
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 10080
 
     class Config:
-        env_file = ".env"
+        env_file = str(ENV_PATH)
         case_sensitive = True
 
 
 settings = Settings()
+
