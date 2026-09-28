@@ -19,6 +19,11 @@ export default function CheckoutModal({ cart, onClose, onOrderSuccess, currentUs
   const [error, setError] = useState(null)
   const [receipt, setReceipt] = useState(null)
 
+  // Unique idempotency key generated once per checkout session
+  const [idempotencyKey] = useState(() =>
+    'checkout_' + (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).substring(2, 9))
+  )
+
   // Calculations
   const totalAmount = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const totalUnits = cart.reduce((sum, item) => sum + item.quantity, 0)
@@ -55,8 +60,8 @@ export default function CheckoutModal({ cart, onClose, onOrderSuccess, currentUs
         })),
       }
 
-      // 2. Call backend API
-      const createdOrder = await createOrder(orderPayload)
+      // 2. Call backend API with Idempotency-Key
+      const createdOrder = await createOrder(orderPayload, null, idempotencyKey)
 
       // 3. Save receipt and notify parent
       setReceipt(createdOrder)

@@ -116,18 +116,24 @@ export const createProduct = async (productData, token = null) => {
  * @param {Array<{ product_id: number, quantity: number }>} orderData.items
  * @param {string} [token] - Optional JWT token. If omitted, reads from localStorage.
  */
-export const createOrder = async (orderData, token = null) => {
+export const createOrder = async (orderData, token = null, idempotencyKey = null) => {
   const authToken = token || localStorage.getItem('pramazon_token')
   if (!authToken) {
     throw new Error('Please sign in to place an order.')
   }
 
+  const headers = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${authToken}`,
+  }
+
+  if (idempotencyKey) {
+    headers['Idempotency-Key'] = idempotencyKey
+  }
+
   const response = await fetch(`${API_BASE_URL}/orders/`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${authToken}`,
-    },
+    headers,
     body: JSON.stringify(orderData),
   })
 

@@ -23,7 +23,11 @@ pnpm-debug.log*
 
 # Database & Environment
 *.db
+*.db-wal
+*.db-shm
 *.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
 backend/.env
 frontend/.env
 .env.local
