@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict
-from typing import Optional
+from typing import Optional, List
 
 
 # 1. Base Schema: Shared attributes
@@ -28,3 +28,13 @@ class ProductResponse(ProductBase):
     # ConfigDict(from_attributes=True) tells Pydantic:
     # "You are allowed to read data directly from a SQLAlchemy database object!"
     model_config = ConfigDict(from_attributes=True)
+
+
+# 4. Paginated Response: Standard metadata envelope for paginated collections
+class PaginatedProductResponse(BaseModel):
+    items: List[ProductResponse]
+    total: int
+    page: int
+    limit: int
+    total_pages: int
+

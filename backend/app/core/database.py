@@ -1,13 +1,15 @@
+import os
+from pathlib import Path
 import sqlite3
 from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 # 1. Database Connection URL
-# For SQLite, it connects to a local file called 'pramazon.db' in the backend folder.
-# In Phase 7, upgrading to PostgreSQL is as simple as changing this one line:
-# SQLALCHEMY_DATABASE_URL = "postgresql://user:password@localhost:5432/pramazon"
-SQLALCHEMY_DATABASE_URL = "sqlite:///./pramazon.db"
+# Resolved to absolute path in the backend folder so scripts and uvicorn share the exact same DB
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+DB_FILE = BASE_DIR / "pramazon.db"
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{DB_FILE.as_posix()}")
 
 # 2. Database Engine
 # Manages the actual low-level connection to the 'pramazon.db' file.

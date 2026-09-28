@@ -19,6 +19,12 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
+  // Catalog Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalProducts, setTotalProducts] = useState(0)
+  const PRODUCTS_PER_PAGE = 20
+
   // Shopping cart state with localStorage persistence
   const [cart, setCart] = useState(() => {
     try {
@@ -115,13 +121,22 @@ export default function App() {
     loadCategories()
   }
 
-  // Fetch products whenever selectedCategory OR searchTerm changes
-  const loadProducts = async () => {
+  // Fetch paginated products from backend
+  const loadProducts = async (pageToFetch = currentPage) => {
     setLoading(true)
     setError(null)
     try {
-      const data = await fetchProducts(selectedCategory, searchTerm)
-      setProducts(data)
+      const data = await fetchProducts(selectedCategory, searchTerm, pageToFetch, PRODUCTS_PER_PAGE)
+      if (Array.isArray(data)) {
+        // Fallback in case raw array is received
+        setProducts(data)
+        setTotalProducts(data.length)
+        setTotalPages(1)
+      } else {
+        setProducts(data.items || [])
+        setTotalProducts(data.total || 0)
+        setTotalPages(data.total_pages || 1)
+      }
     } catch (err) {
       setError(err.message || 'Failed to connect to backend service')
     } finally {
@@ -129,14 +144,19 @@ export default function App() {
     }
   }
 
-  // Fetch products with a 300ms debounce to prevent race conditions while typing
+  // Reset to page 1 whenever category or search filter changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [selectedCategory, searchTerm])
+
+  // Fetch products with a 300ms debounce whenever filter, search, or currentPage changes
   useEffect(() => {
     const timer = setTimeout(() => {
-      loadProducts()
+      loadProducts(currentPage)
     }, 300)
 
     return () => clearTimeout(timer)
-  }, [selectedCategory, searchTerm])
+  }, [selectedCategory, searchTerm, currentPage])
 
   // Handler to add a product to the cart with quantity tracking and stock limits
   const handleAddToCart = (product, quantityToAdd = 1) => {
@@ -362,7 +382,11 @@ export default function App() {
               </p>
             </div>
             <span className="product-count-badge">
-              {loading ? 'Refreshing...' : `${products.length} Items Available`}
+              {loading
+                ? 'Refreshing...'
+                : totalProducts > 0
+                ? `Showing ${(currentPage - 1) * PRODUCTS_PER_PAGE + 1}–${Math.min(currentPage * PRODUCTS_PER_PAGE, totalProducts)} of ${totalProducts} Products`
+                : '0 Products Found'}
             </span>
           </div>
 
@@ -393,7 +417,7 @@ export default function App() {
           )}
 
           {/* Product Grid */}
-          {!loading && !error && (
+          {!loading && !error && products.length > 0 && (
             <div className="products-grid">
               {products.map((product) => (
                 <ProductCard
@@ -403,6 +427,98 @@ export default function App() {
                   onViewDetails={setSelectedProduct}
                 />
               ))}
+            </div>
+          )}
+
+          {/* Empty Search State */}
+          {!loading && !error && products.length === 0 && (
+            <div className="products-empty-state">
+              <span className="empty-state-icon">🔍</span>
+              <h3>No matching products found</h3>
+              <p>Try searching with different keywords or clear your active category filter.</p>
+              <button
+                className="btn-primary"
+                onClick={() => {
+                  setSearchTerm('')
+                  setSelectedCategory('')
+                  setCurrentPage(1)
+                }}
+              >
+                Clear All Filters
+              </button>
+            </div>
+          )}
+
+          {/* Amazon-Style Catalog Pagination Bar */}
+          {!loading && !error && totalPages > 1 && (
+            <div className="pagination-bar">
+              <button
+                className="pagination-btn pagination-nav-btn"
+                disabled={currentPage <= 1}
+                onClick={() => {
+                  setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  window.scrollTo({ top: 350, behavior: 'smooth' })
+                }}
+              >
+                &larr; Previous
+              </button>
+
+              <div className="pagination-pages">
+                {/* Always show page 1 */}
+                <button
+                  className={`pagination-page-number ${currentPage === 1 ? 'active' : ''}`}
+                  onClick={() => {
+                    setCurrentPage(1)
+                    window.scrollTo({ top: 350, behavior: 'smooth' })
+                  }}
+                >
+                  1
+                </button>
+
+                {/* Left ellipsis if far from start */}
+                {currentPage > 3 && <span className="pagination-ellipsis">&hellip;</span>}
+
+                {/* Neighbor pages around currentPage */}
+                {[currentPage - 1, currentPage, currentPage + 1]
+                  .filter((p) => p > 1 && p < totalPages)
+                  .map((p) => (
+                    <button
+                      key={p}
+                      className={`pagination-page-number ${currentPage === p ? 'active' : ''}`}
+                      onClick={() => {
+                        setCurrentPage(p)
+                        window.scrollTo({ top: 350, behavior: 'smooth' })
+                      }}
+                    >
+                      {p}
+                    </button>
+                  ))}
+
+                {/* Right ellipsis if far from end */}
+                {currentPage < totalPages - 2 && <span className="pagination-ellipsis">&hellip;</span>}
+
+                {/* Always show last page */}
+                <button
+                  className={`pagination-page-number ${currentPage === totalPages ? 'active' : ''}`}
+                  onClick={() => {
+                    setCurrentPage(totalPages)
+                    window.scrollTo({ top: 350, behavior: 'smooth' })
+                  }}
+                >
+                  {totalPages}
+                </button>
+              </div>
+
+              <button
+                className="pagination-btn pagination-nav-btn"
+                disabled={currentPage >= totalPages}
+                onClick={() => {
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  window.scrollTo({ top: 350, behavior: 'smooth' })
+                }}
+              >
+                Next &rarr;
+              </button>
             </div>
           )}
         </section>

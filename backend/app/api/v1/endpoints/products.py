@@ -1,3 +1,4 @@
+import math
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
@@ -5,21 +6,24 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models.product import Product
 from app.models.user import User
-from app.schemas.product import ProductCreate, ProductResponse
+from app.schemas.product import ProductCreate, ProductResponse, PaginatedProductResponse
 from app.api.deps import get_current_admin
 
 # Create the dedicated router for products
 router = APIRouter(prefix="/products", tags=["Products"])
 
 
-@router.get("/", response_model=List[ProductResponse])
+@router.get("/", response_model=PaginatedProductResponse)
 def get_products(
     category: Optional[str] = Query(None, description="Filter products by category (e.g. Electronics, Books)"),
     search: Optional[str] = Query(None, description="Search products by title or description keyword"),
+    page: int = Query(1, ge=1, description="Page number (1-indexed)"),
+    limit: int = Query(20, ge=1, le=100, description="Items per page (max 100)"),
     db: Session = Depends(get_db)
 ):
     """
-    Fetch all products, with optional search keyword and category filtering.
+    Fetch paginated products, with optional search keyword and category filtering.
+    Returns items along with total count, current page, limit, and total pages.
     """
     query = db.query(Product)
 
@@ -34,7 +38,21 @@ def get_products(
             (Product.description.ilike(f"%{search}%"))
         )
 
-    return query.all()
+    # 3. Count total matching products
+    total = query.count()
+    total_pages = math.ceil(total / limit) if total > 0 else 1
+
+    # 4. Deterministic slice via offset and limit
+    skip = (page - 1) * limit
+    items = query.order_by(Product.id.asc()).offset(skip).limit(limit).all()
+
+    return {
+        "items": items,
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "total_pages": total_pages
+    }
 
 
 @router.get("/categories", response_model=List[str])
