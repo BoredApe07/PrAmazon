@@ -1,33 +1,52 @@
+import math
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Header
+from fastapi import APIRouter, Depends, HTTPException, status, Header, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import update
 from sqlalchemy.exc import IntegrityError
 
 from app.core.database import get_db
 from app.models import Product, Order, OrderItem, User
-from app.schemas import OrderCreate, OrderResponse, OrderStatusUpdate
+from app.schemas import OrderCreate, OrderResponse, OrderStatusUpdate, PaginatedOrderResponse
 from app.api.deps import get_current_user, get_current_admin
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
 
-@router.get("/", response_model=List[OrderResponse])
+@router.get("/", response_model=PaginatedOrderResponse)
 def list_orders(
-    limit: int = 20,
+    page: int = Query(1, ge=1, description="Page number (1-indexed)"),
+    limit: int = Query(10, ge=1, le=100, description="Items per page"),
+    status: Optional[str] = Query(None, description="Optional status filter: confirmed, shipped, out_for_delivery, delivered, cancelled"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
-    List orders securely for authenticated users:
+    List orders securely for authenticated users with pagination:
     - Customers can ONLY view their own orders (strict isolation).
     - Administrators can view all orders across the store.
+    - Optional status filtering (e.g. delivered, shipped).
     """
     query = db.query(Order)
     if current_user.role != "admin":
         query = query.filter(Order.user_id == current_user.id)
 
-    return query.order_by(Order.created_at.desc()).limit(limit).all()
+    if status:
+        query = query.filter(Order.status == status)
+
+    total = query.count()
+    total_pages = math.ceil(total / limit) if total > 0 else 1
+
+    skip = (page - 1) * limit
+    items = query.order_by(Order.created_at.desc(), Order.id.desc()).offset(skip).limit(limit).all()
+
+    return {
+        "items": items,
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "total_pages": total_pages
+    }
 
 
 @router.post("/", response_model=OrderResponse, status_code=status.HTTP_201_CREATED)

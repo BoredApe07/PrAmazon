@@ -149,17 +149,26 @@ export const createOrder = async (orderData, token = null, idempotencyKey = null
 }
 
 /**
- * Fetch orders for the currently authenticated user.
+ * Fetch paginated orders for the currently authenticated user.
  * 
- * @param {string} [token] - Optional JWT token. If omitted, reads from localStorage.
+ * @param {number} [page=1] - Page number (1-indexed)
+ * @param {number} [limit=10] - Items per page
+ * @param {string} [status=''] - Optional status filter
+ * @param {string} [token=null] - Optional JWT token. If omitted, reads from localStorage.
  */
-export const fetchOrders = async (token = null) => {
+export const fetchOrders = async (page = 1, limit = 10, status = '', token = null) => {
   const authToken = token || localStorage.getItem('pramazon_token')
   if (!authToken) {
     throw new Error('Please sign in to view your orders.')
   }
 
-  const response = await fetch(`${API_BASE_URL}/orders/`, {
+  const params = new URLSearchParams()
+  if (page) params.append('page', page)
+  if (limit) params.append('limit', limit)
+  if (status) params.append('status', status)
+
+  const queryString = params.toString() ? `?${params.toString()}` : ''
+  const response = await fetch(`${API_BASE_URL}/orders/${queryString}`, {
     headers: {
       'Authorization': `Bearer ${authToken}`,
     },

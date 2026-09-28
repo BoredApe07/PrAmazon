@@ -61,3 +61,13 @@ class OrderResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
+# 3. Paginated Response for Order History
+class PaginatedOrderResponse(BaseModel):
+    items: List[OrderResponse]
+    total: int
+    page: int
+    limit: int
+    total_pages: int
+
+

@@ -14,6 +14,13 @@ export default function OrdersModal({ onClose, onViewProduct, currentUser, onOrd
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
+  // Pagination & Filtering state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalOrders, setTotalOrders] = useState(0)
+  const [statusFilter, setStatusFilter] = useState('')
+  const ORDERS_PER_PAGE = 10
+
   // Live search filter state
   const [searchTerm, setSearchTerm] = useState('')
   const [cancellingId, setCancellingId] = useState(null)
@@ -67,23 +74,36 @@ export default function OrdersModal({ onClose, onViewProduct, currentUser, onOrd
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [onClose])
 
-  // Load orders on mount (filtered by logged-in user if authenticated)
+  // Reset to page 1 whenever statusFilter changes
   useEffect(() => {
-    loadOrders()
-  }, [currentUser])
+    setCurrentPage(1)
+  }, [statusFilter])
 
-  const loadOrders = async () => {
+  // Fetch paginated orders whenever user, page, or status filter changes
+  const loadOrders = async (pageToFetch = currentPage, statusToFetch = statusFilter) => {
     setLoading(true)
     setError(null)
     try {
-      const data = await fetchOrders()
-      setOrders(data)
+      const data = await fetchOrders(pageToFetch, ORDERS_PER_PAGE, statusToFetch)
+      if (Array.isArray(data)) {
+        setOrders(data)
+        setTotalOrders(data.length)
+        setTotalPages(1)
+      } else {
+        setOrders(data.items || [])
+        setTotalOrders(data.total || 0)
+        setTotalPages(data.total_pages || 1)
+      }
     } catch (err) {
       setError(err.message || 'Unable to load orders')
     } finally {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    loadOrders(currentPage, statusFilter)
+  }, [currentUser, currentPage, statusFilter])
 
   // Format currency in Indian Rupees
   const formatINR = (amount) =>
@@ -139,7 +159,7 @@ export default function OrdersModal({ onClose, onViewProduct, currentUser, onOrd
           </button>
         </div>
 
-        {/* Live Search Bar */}
+        {/* Live Search Bar & Status Filters */}
         <div className="orders-lookup-bar">
           <div className="orders-lookup-form">
             <span className="lookup-icon">🔍</span>
@@ -159,6 +179,27 @@ export default function OrdersModal({ onClose, onViewProduct, currentUser, onOrd
                 Clear
               </button>
             )}
+          </div>
+
+          {/* Status Filter Pills */}
+          <div className="orders-status-filter-pills">
+            {[
+              { label: 'All Orders', value: '' },
+              { label: 'Confirmed', value: 'confirmed' },
+              { label: 'Shipped', value: 'shipped' },
+              { label: 'Out for Delivery', value: 'out_for_delivery' },
+              { label: 'Delivered', value: 'delivered' },
+              { label: 'Cancelled', value: 'cancelled' },
+            ].map((tab) => (
+              <button
+                key={tab.value}
+                type="button"
+                className={`orders-filter-pill ${statusFilter === tab.value ? 'active' : ''}`}
+                onClick={() => setStatusFilter(tab.value)}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -222,7 +263,9 @@ export default function OrdersModal({ onClose, onViewProduct, currentUser, onOrd
                 <h3 className="section-title" style={{ margin: 0 }}>
                   {searchTerm.trim()
                     ? `Search Results (${filteredOrders.length})`
-                    : `All Orders (${orders.length})`}
+                    : totalOrders > 0
+                    ? `Showing ${(currentPage - 1) * ORDERS_PER_PAGE + 1}–${Math.min(currentPage * ORDERS_PER_PAGE, totalOrders)} of ${totalOrders} Orders`
+                    : '0 Orders'}
                 </h3>
                 {searchTerm.trim() && (
                   <button
@@ -256,6 +299,79 @@ export default function OrdersModal({ onClose, onViewProduct, currentUser, onOrd
                   updatingStatusId={updatingStatusId}
                 />
               ))}
+
+              {/* Amazon-Style Orders Pagination Bar */}
+              {!loading && !error && totalPages > 1 && (
+                <div className="orders-pagination-bar">
+                  <button
+                    className="orders-page-btn orders-nav-btn"
+                    disabled={currentPage <= 1}
+                    onClick={() => {
+                      setCurrentPage((prev) => Math.max(prev - 1, 1))
+                      const modalBody = document.querySelector('.orders-modal-body')
+                      if (modalBody) modalBody.scrollTo({ top: 0, behavior: 'smooth' })
+                    }}
+                  >
+                    &larr; Previous
+                  </button>
+
+                  <div className="orders-page-numbers">
+                    <button
+                      className={`orders-page-num ${currentPage === 1 ? 'active' : ''}`}
+                      onClick={() => {
+                        setCurrentPage(1)
+                        const modalBody = document.querySelector('.orders-modal-body')
+                        if (modalBody) modalBody.scrollTo({ top: 0, behavior: 'smooth' })
+                      }}
+                    >
+                      1
+                    </button>
+
+                    {currentPage > 3 && <span className="orders-page-ellipsis">&hellip;</span>}
+
+                    {[currentPage - 1, currentPage, currentPage + 1]
+                      .filter((p) => p > 1 && p < totalPages)
+                      .map((p) => (
+                        <button
+                          key={p}
+                          className={`orders-page-num ${currentPage === p ? 'active' : ''}`}
+                          onClick={() => {
+                            setCurrentPage(p)
+                            const modalBody = document.querySelector('.orders-modal-body')
+                            if (modalBody) modalBody.scrollTo({ top: 0, behavior: 'smooth' })
+                          }}
+                        >
+                          {p}
+                        </button>
+                      ))}
+
+                    {currentPage < totalPages - 2 && <span className="orders-page-ellipsis">&hellip;</span>}
+
+                    <button
+                      className={`orders-page-num ${currentPage === totalPages ? 'active' : ''}`}
+                      onClick={() => {
+                        setCurrentPage(totalPages)
+                        const modalBody = document.querySelector('.orders-modal-body')
+                        if (modalBody) modalBody.scrollTo({ top: 0, behavior: 'smooth' })
+                      }}
+                    >
+                      {totalPages}
+                    </button>
+                  </div>
+
+                  <button
+                    className="orders-page-btn orders-nav-btn"
+                    disabled={currentPage >= totalPages}
+                    onClick={() => {
+                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                      const modalBody = document.querySelector('.orders-modal-body')
+                      if (modalBody) modalBody.scrollTo({ top: 0, behavior: 'smooth' })
+                    }}
+                  >
+                    Next &rarr;
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -5,6 +5,7 @@ from app.schemas.order import (
     OrderStatusUpdate,
     OrderItemCreate,
     OrderItemResponse,
+    PaginatedOrderResponse,
 )
 from app.schemas.user import (
     UserCreate,
