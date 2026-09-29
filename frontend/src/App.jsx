@@ -252,13 +252,19 @@ export default function App() {
   // Calculate total units (e.g. 2 headphones + 1 laptop = 3 items)
   const totalItemsCount = cart.reduce((total, item) => total + item.quantity, 0)
 
-  // Calculate cart total price (price * quantity)
-  const cartTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  // Calculate cart total price (price * quantity) in integer rupees
+  const cartTotal = cart.reduce((sum, item) => sum + Math.round(item.price) * item.quantity, 0)
   const formattedCartTotal = new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency: 'INR',
-    maximumFractionDigits: 2,
-  }).format(cartTotal)
+    maximumFractionDigits: 0,
+    minimumFractionDigits: 0,
+  }).format(Math.round(cartTotal))
+
+  // Filter products: backend handles it with in_stock=true, client-side guard guarantees 0ms instantaneous filtering
+  const displayedProducts = inStockOnly
+    ? products.filter((p) => p.stock > 0)
+    : products
 
   return (
     <div className="app-layout">
@@ -403,9 +409,9 @@ export default function App() {
           )}
 
           {/* Product Grid */}
-          {!loading && !error && products.length > 0 && (
+          {!loading && !error && displayedProducts.length > 0 && (
             <div className="products-grid">
-              {products.map((product) => (
+              {displayedProducts.map((product) => (
                 <ProductCard
                   key={product.id}
                   product={product}
@@ -417,7 +423,7 @@ export default function App() {
           )}
 
           {/* Empty Search State */}
-          {!loading && !error && products.length === 0 && (
+          {!loading && !error && displayedProducts.length === 0 && (
             <div className="products-empty-state">
               <span className="empty-state-icon">🔍</span>
               <h3>No matching products found</h3>

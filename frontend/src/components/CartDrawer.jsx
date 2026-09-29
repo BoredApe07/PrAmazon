@@ -18,17 +18,18 @@ export default function CartDrawer({
   onOpenCheckout,
   onViewProduct,
 }) {
-  // Calculate subtotal
-  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  // Calculate subtotal in integer rupees
+  const subtotal = cart.reduce((sum, item) => sum + Math.round(item.price) * item.quantity, 0)
   const totalUnits = cart.reduce((sum, item) => sum + item.quantity, 0)
 
-  // Format currency into INR
+  // Format currency into INR without paise (e.g. ₹24,990)
   const formatINR = (amount) =>
     new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
-      maximumFractionDigits: 2,
-    }).format(amount)
+      maximumFractionDigits: 0,
+      minimumFractionDigits: 0,
+    }).format(Math.round(amount))
 
   return (
     <div className="cart-overlay" onClick={onClose}>

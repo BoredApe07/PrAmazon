@@ -105,13 +105,14 @@ export default function OrdersModal({ onClose, onViewProduct, currentUser, onOrd
     loadOrders(currentPage, statusFilter)
   }, [currentUser, currentPage, statusFilter])
 
-  // Format currency in Indian Rupees
+  // Format currency in Indian Rupees without paise (e.g. ₹24,990)
   const formatINR = (amount) =>
     new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
-      maximumFractionDigits: 2,
-    }).format(amount)
+      maximumFractionDigits: 0,
+      minimumFractionDigits: 0,
+    }).format(Math.round(amount))
 
   // Format date readable
   const formatDate = (isoString) => {

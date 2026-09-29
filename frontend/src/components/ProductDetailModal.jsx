@@ -16,6 +16,7 @@ export default function ProductDetailModal({ product, onClose, onAddToCart, onBu
   // Local state for quantity selector (minimum 1, maximum available stock)
   const [quantity, setQuantity] = useState(1)
   const [addedNotice, setAddedNotice] = useState(false)
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0)
 
   // Close modal when pressing Escape key
   useEffect(() => {
@@ -30,15 +31,28 @@ export default function ProductDetailModal({ product, onClose, onAddToCart, onBu
 
   if (!product) return null
 
-  // Format price into Indian Rupees format (₹)
+  // Format price into Indian Rupees format without paise (₹)
   const formattedPrice = new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency: 'INR',
-    maximumFractionDigits: 2,
-  }).format(product.price)
+    maximumFractionDigits: 0,
+    minimumFractionDigits: 0,
+  }).format(Math.round(product.price))
 
   const isOutOfStock = product.stock <= 0
   const isLowStock = product.stock > 0 && product.stock <= 5
+
+  // Gallery items for future scalability (multiple photos per product)
+  const galleryItems = (product.images && product.images.length > 0)
+    ? product.images.map((url) => ({ url }))
+    : [
+        { url: product.image_url },
+        { url: product.image_url },
+        { url: product.image_url },
+        { url: product.image_url },
+      ]
+
+  const activeImage = galleryItems[selectedImageIndex] || galleryItems[0]
 
   // Quantity handlers
   const handleIncrease = () => {
@@ -85,17 +99,29 @@ export default function ProductDetailModal({ product, onClose, onAddToCart, onBu
         </button>
 
         <div className="product-modal-grid">
-          {/* Left Column: Image Section */}
+          {/* Left Column: Image Section with Scalable Multi-Image Gallery */}
           <div className="product-modal-image-col">
             <div className="product-modal-image-box">
               <img
-                src={product.image_url}
+                src={activeImage.url}
                 alt={product.title}
                 className="product-modal-img"
               />
-              <span className="product-modal-category-tag">
-                {product.category}
-              </span>
+            </div>
+
+            {/* Thumbnail Placeholders for Future Multi-Image Scalability */}
+            <div className="product-modal-thumbnails">
+              {galleryItems.map((item, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  className={`modal-thumb-btn ${selectedImageIndex === idx ? 'active' : ''}`}
+                  onClick={() => setSelectedImageIndex(idx)}
+                  title={`Photo ${idx + 1}`}
+                >
+                  <img src={item.url} alt={`Photo ${idx + 1}`} className="modal-thumb-img" />
+                </button>
+              ))}
             </div>
           </div>
 

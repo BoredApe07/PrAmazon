@@ -24,17 +24,18 @@ export default function CheckoutModal({ cart, onClose, onOrderSuccess, currentUs
     'checkout_' + (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).substring(2, 9))
   )
 
-  // Calculations
-  const totalAmount = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  // Calculations in integer rupees
+  const totalAmount = cart.reduce((sum, item) => sum + Math.round(item.price) * item.quantity, 0)
   const totalUnits = cart.reduce((sum, item) => sum + item.quantity, 0)
 
-  // INR currency formatter
+  // INR currency formatter without paise (e.g. ₹24,990)
   const formatINR = (amount) =>
     new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
-      maximumFractionDigits: 2,
-    }).format(amount)
+      maximumFractionDigits: 0,
+      minimumFractionDigits: 0,
+    }).format(Math.round(amount))
 
   // Submit order to FastAPI backend
   const handleSubmit = async (e) => {

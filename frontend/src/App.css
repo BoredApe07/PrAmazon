@@ -508,34 +508,41 @@
 
 @media (max-width: 640px) {
   .container {
-    padding: 1rem 0.85rem;
+    padding: 0.85rem 0.75rem;
   }
 
-  /* Navbar Mobile Layout */
+  /* 1. Navbar Mobile Spacing & Layout */
   .navbar {
-    padding: 0.65rem 0.85rem;
+    padding: 0.75rem 1rem 0.65rem;
   }
   .navbar-container {
+    display: flex;
     flex-wrap: wrap;
-    gap: 0.6rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0;
   }
   .brand {
-    font-size: 1.35rem;
+    font-size: 1.4rem;
+    order: 1;
   }
   .navbar-actions {
-    gap: 0.45rem;
+    order: 2;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
   }
   .account-nav-btn,
   .orders-nav-btn {
-    padding: 0.25rem 0.4rem;
+    padding: 0.25rem 0.45rem;
   }
   .account-nav-top,
   .orders-nav-top {
-    font-size: 0.65rem;
+    font-size: 0.62rem;
   }
   .account-nav-bottom,
   .orders-nav-bottom {
-    font-size: 0.78rem;
+    font-size: 0.76rem;
   }
   .account-signout-btn {
     font-size: 0.72rem;
@@ -545,68 +552,50 @@
     font-size: 0.75rem;
   }
   .cart-btn {
-    padding: 0.35rem 0.7rem;
-    font-size: 0.8rem;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.82rem;
     gap: 0.35rem;
   }
+  /* Amazon Mobile Style: Hide the word 'Cart' to save precious horizontal space */
+  .cart-label {
+    display: none;
+  }
   .cart-count {
-    font-size: 0.7rem;
+    font-size: 0.72rem;
     padding: 0.1rem 0.45rem;
   }
 
   .search-bar-container {
     order: 3;
+    width: 100%;
     max-width: 100%;
-    margin: 0;
-    padding: 0.35rem 0.75rem;
+    margin: 0.6rem 0 0.15rem 0;
+    padding: 0.45rem 0.85rem;
   }
 
-  /* Hero Banner Compacted on Mobile */
+  /* 2. Hero Banner Compacted on Mobile */
   .hero {
-    padding: 1.25rem 0.5rem 1rem;
-  }
-  .hero-tag {
-    font-size: 0.68rem;
-    padding: 0.25rem 0.65rem;
-    margin-bottom: 0.6rem;
+    padding: 0.75rem 0.5rem 0.5rem;
   }
   .hero-title {
-    font-size: 1.55rem;
-    margin-bottom: 0.5rem;
-    line-height: 1.25;
-  }
-  .hero-subtitle {
-    font-size: 0.82rem;
-    line-height: 1.45;
-  }
-
-  /* Storefront Header */
-  .storefront-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.6rem;
-    margin-bottom: 1rem;
-  }
-  .storefront-title {
     font-size: 1.35rem;
+    margin-bottom: 0.25rem;
   }
-  .storefront-subtitle {
+  .hero-desc {
     font-size: 0.82rem;
-  }
-  .product-count-badge {
-    font-size: 0.78rem;
-    padding: 0.3rem 0.75rem;
+    line-height: 1.4;
   }
 
-  /* Products Grid */
+  /* 3. Products Grid: 2 Cards per Line on Mobile */
   .products-grid {
-    gap: 1rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.85rem;
   }
 
-  /* Pagination Single-Line Mobile Fix (Prevents Next button from wrapping!) */
+  /* 4. Pagination Single-Line Mobile (Prevents Next button from wrapping!) */
   .pagination-bar {
     gap: 0.3rem;
-    margin-top: 2rem;
+    margin-top: 1.75rem;
     margin-bottom: 1rem;
     flex-wrap: nowrap;
     justify-content: center;

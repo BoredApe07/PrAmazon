@@ -1,11 +1,19 @@
 /* Category Filter Bar Styling */
 
-.category-filter-bar {
+.category-filter-container {
+  margin-bottom: 1.5rem;
+}
+
+/* 1. Desktop Pill Filter Bar (Default) */
+.category-desktop-bar {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 0.65rem;
-  margin-bottom: 1.75rem;
+}
+
+.category-mobile-bar {
+  display: none;
 }
 
 .category-pill {
@@ -71,27 +79,60 @@
   font-size: 0.82rem;
 }
 
-/* Mobile Responsive Optimization: Clean single-row swipe with NO slider bar */
+/* 2. Mobile Responsive View (Screens <= 640px) */
 @media (max-width: 640px) {
-  .category-filter-bar {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    white-space: nowrap;
-    gap: 0.5rem;
-    margin-bottom: 1.25rem;
-    padding-bottom: 0.25rem;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none; /* Hide scrollbar on Firefox */
-    -ms-overflow-style: none; /* Hide scrollbar on Edge */
+  .category-desktop-bar {
+    display: none;
   }
 
-  .category-filter-bar::-webkit-scrollbar {
-    display: none; /* Hide scrollbar on Chrome/Safari/iOS/Android */
+  .category-mobile-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    width: 100%;
   }
 
-  .category-pill {
-    padding: 0.4rem 0.9rem;
+  .category-select-wrapper {
+    position: relative;
+    flex: 1;
+    display: flex;
+    align-items: center;
+  }
+
+  .category-mobile-select {
+    width: 100%;
+    appearance: none;
+    -webkit-appearance: none;
+    background: #111827;
+    color: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.55rem 2.2rem 0.55rem 0.85rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.2s ease;
+  }
+
+  .category-mobile-select:focus {
+    border-color: var(--accent-gold);
+    box-shadow: 0 0 12px rgba(255, 153, 0, 0.2);
+  }
+
+  .category-select-chevron {
+    position: absolute;
+    right: 0.85rem;
+    color: var(--accent-gold);
+    font-size: 0.95rem;
+    pointer-events: none;
+  }
+
+  .mobile-in-stock-btn {
+    padding: 0.55rem 0.85rem;
     font-size: 0.8rem;
+    border-radius: 10px;
+    white-space: nowrap;
     flex-shrink: 0;
   }
 }
