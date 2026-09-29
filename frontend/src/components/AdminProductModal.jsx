@@ -148,54 +148,55 @@ export default function AdminProductModal({ onClose, onProductCreated, categorie
           </div>
 
           {/* Category Selector */}
-          <div className="form-row">
-            <div className="form-group flex-1">
-              <label htmlFor="category">Category *</label>
-              {!isCustomCategory ? (
-                <div className="category-select-wrapper">
-                  <select
-                    id="category"
-                    value={formData.category}
-                    onChange={handleCategorySelect}
-                    disabled={loading}
-                  >
-                    {categories.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                    <option value="__custom__">➕ New Category...</option>
-                  </select>
-                </div>
-              ) : (
-                <div className="custom-category-group">
-                  <input
-                    type="text"
-                    name="customCategory"
-                    placeholder="Enter new category name..."
-                    value={formData.customCategory}
-                    onChange={handleChange}
-                    autoFocus
-                    disabled={loading}
-                  />
-                  <button
-                    type="button"
-                    className="cancel-custom-cat-btn"
-                    onClick={() => {
-                      setIsCustomCategory(false)
-                      setFormData((prev) => ({
-                        ...prev,
-                        category: categories[0] || 'Electronics',
-                        customCategory: '',
-                      }))
-                    }}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              )}
-            </div>
+          <div className="form-group">
+            <label htmlFor="category">Category *</label>
+            {!isCustomCategory ? (
+              <div className="category-select-wrapper">
+                <select
+                  id="category"
+                  value={formData.category}
+                  onChange={handleCategorySelect}
+                  disabled={loading}
+                >
+                  {categories.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                  <option value="__custom__">➕ New Category...</option>
+                </select>
+              </div>
+            ) : (
+              <div className="custom-category-group">
+                <input
+                  type="text"
+                  name="customCategory"
+                  placeholder="Enter new category name..."
+                  value={formData.customCategory}
+                  onChange={handleChange}
+                  autoFocus
+                  disabled={loading}
+                />
+                <button
+                  type="button"
+                  className="cancel-custom-cat-btn"
+                  onClick={() => {
+                    setIsCustomCategory(false)
+                    setFormData((prev) => ({
+                      ...prev,
+                      category: categories[0] || 'Electronics',
+                      customCategory: '',
+                    }))
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+          </div>
 
+          {/* Price & Initial Stock Row */}
+          <div className="form-row">
             {/* Price in INR */}
             <div className="form-group flex-1">
               <label htmlFor="price">Price (₹ INR) *</label>
@@ -203,7 +204,7 @@ export default function AdminProductModal({ onClose, onProductCreated, categorie
                 id="price"
                 name="price"
                 type="number"
-                step="0.01"
+                step="1"
                 min="1"
                 required
                 placeholder="e.g. 24999"

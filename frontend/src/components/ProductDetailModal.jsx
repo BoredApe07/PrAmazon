@@ -15,7 +15,6 @@ import './ProductDetailModal.css'
 export default function ProductDetailModal({ product, onClose, onAddToCart, onBuyNow }) {
   // Local state for quantity selector (minimum 1, maximum available stock)
   const [quantity, setQuantity] = useState(1)
-  const [addedNotice, setAddedNotice] = useState(false)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
 
   // Close modal when pressing Escape key
@@ -67,12 +66,10 @@ export default function ProductDetailModal({ product, onClose, onAddToCart, onBu
     }
   }
 
-  // Handle Add to Cart with temporary visual feedback
+  // Handle Add to Cart
   const handleAdd = () => {
     if (onAddToCart) {
       onAddToCart(product, quantity)
-      setAddedNotice(true)
-      setTimeout(() => setAddedNotice(false), 2000)
     }
   }
 
@@ -233,13 +230,6 @@ export default function ProductDetailModal({ product, onClose, onAddToCart, onBu
                     Buy Now
                   </button>
                 </div>
-
-                {/* Temporary confirmation banner */}
-                {addedNotice && (
-                  <div className="modal-added-banner">
-                    ✓ Added {quantity} {quantity > 1 ? 'items' : 'item'} to your cart!
-                  </div>
-                )}
               </div>
             )}
           </div>

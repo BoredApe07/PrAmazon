@@ -445,17 +445,7 @@
   box-shadow: 0 4px 12px rgba(255, 143, 0, 0.4);
 }
 
-.modal-added-banner {
-  background: rgba(16, 185, 129, 0.15);
-  color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  padding: 0.5rem 0.85rem;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-align: center;
-  margin-top: 0.35rem;
-}
+
 
 /* Mobile Responsiveness for Modal */
 @media (max-width: 640px) {
