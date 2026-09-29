@@ -6,6 +6,8 @@ from app.core.config import settings
 # 1. Database Connection URL
 # Connects to Neon Serverless PostgreSQL via PgBouncer pooled URL for high concurrency
 DATABASE_URL = settings.DATABASE_URL_POOLED or settings.DATABASE_URL
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
 # 2. Database Engine
 # pool_pre_ping=True: Tests connection health before using it, preventing stale connection errors
