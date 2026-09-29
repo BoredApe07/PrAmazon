@@ -267,30 +267,16 @@
 /* Hero Banner */
 .hero {
   text-align: center;
-  padding: 3rem 1rem 2.5rem;
-  max-width: 800px;
+  padding: 1.5rem 1rem 1.25rem;
+  max-width: 650px;
   margin: 0 auto;
 }
 
-.hero-tag {
-  display: inline-block;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  padding: 0.35rem 0.85rem;
-  border-radius: 9999px;
-  background: rgba(255, 153, 0, 0.12);
-  color: var(--accent-gold);
-  border: 1px solid rgba(255, 153, 0, 0.25);
-  margin-bottom: 1.25rem;
-}
-
 .hero-title {
-  font-size: 2.6rem;
+  font-size: 2.1rem;
   font-weight: 800;
-  line-height: 1.2;
-  margin-bottom: 1rem;
+  line-height: 1.25;
+  margin-bottom: 0.4rem;
   background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 55%, #ff9900 100%);
   -webkit-background-clip: text;
   background-clip: text;
@@ -298,9 +284,9 @@
 }
 
 .hero-desc {
-  font-size: 1.1rem;
+  font-size: 0.98rem;
   color: var(--text-secondary);
-  line-height: 1.6;
+  line-height: 1.5;
 }
 
 /* Storefront Catalog Section */
@@ -521,21 +507,127 @@
 }
 
 @media (max-width: 640px) {
+  .container {
+    padding: 1rem 0.85rem;
+  }
+
+  /* Navbar Mobile Layout */
+  .navbar {
+    padding: 0.65rem 0.85rem;
+  }
   .navbar-container {
     flex-wrap: wrap;
-    gap: 0.75rem;
+    gap: 0.6rem;
   }
+  .brand {
+    font-size: 1.35rem;
+  }
+  .navbar-actions {
+    gap: 0.45rem;
+  }
+  .account-nav-btn,
+  .orders-nav-btn {
+    padding: 0.25rem 0.4rem;
+  }
+  .account-nav-top,
+  .orders-nav-top {
+    font-size: 0.65rem;
+  }
+  .account-nav-bottom,
+  .orders-nav-bottom {
+    font-size: 0.78rem;
+  }
+  .account-signout-btn {
+    font-size: 0.72rem;
+  }
+  .admin-nav-btn {
+    padding: 0.3rem 0.55rem;
+    font-size: 0.75rem;
+  }
+  .cart-btn {
+    padding: 0.35rem 0.7rem;
+    font-size: 0.8rem;
+    gap: 0.35rem;
+  }
+  .cart-count {
+    font-size: 0.7rem;
+    padding: 0.1rem 0.45rem;
+  }
+
   .search-bar-container {
     order: 3;
     max-width: 100%;
     margin: 0;
+    padding: 0.35rem 0.75rem;
+  }
+
+  /* Hero Banner Compacted on Mobile */
+  .hero {
+    padding: 1.25rem 0.5rem 1rem;
+  }
+  .hero-tag {
+    font-size: 0.68rem;
+    padding: 0.25rem 0.65rem;
+    margin-bottom: 0.6rem;
   }
   .hero-title {
-    font-size: 2rem;
+    font-size: 1.55rem;
+    margin-bottom: 0.5rem;
+    line-height: 1.25;
   }
+  .hero-subtitle {
+    font-size: 0.82rem;
+    line-height: 1.45;
+  }
+
+  /* Storefront Header */
   .storefront-header {
     flex-direction: column;
     align-items: flex-start;
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+  }
+  .storefront-title {
+    font-size: 1.35rem;
+  }
+  .storefront-subtitle {
+    font-size: 0.82rem;
+  }
+  .product-count-badge {
+    font-size: 0.78rem;
+    padding: 0.3rem 0.75rem;
+  }
+
+  /* Products Grid */
+  .products-grid {
+    gap: 1rem;
+  }
+
+  /* Pagination Single-Line Mobile Fix (Prevents Next button from wrapping!) */
+  .pagination-bar {
+    gap: 0.3rem;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    flex-wrap: nowrap;
+    justify-content: center;
+  }
+  .pagination-btn {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.78rem;
+    white-space: nowrap;
+  }
+  .pagination-pages {
+    gap: 0.25rem;
+  }
+  .pagination-page-number {
+    min-width: 30px;
+    height: 30px;
+    font-size: 0.78rem;
+    padding: 0 0.2rem;
+  }
+  .pagination-ellipsis {
+    padding: 0 0.15rem;
+    font-size: 0.78rem;
   }
 }
 

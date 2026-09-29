@@ -16,6 +16,7 @@ export default function App() {
   const [categories, setCategories] = useState([])
   const [selectedCategory, setSelectedCategory] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
+  const [inStockOnly, setInStockOnly] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -23,7 +24,7 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalProducts, setTotalProducts] = useState(0)
-  const PRODUCTS_PER_PAGE = 20
+  const PRODUCTS_PER_PAGE = 12
 
   // Shopping cart state with localStorage persistence
   const [cart, setCart] = useState(() => {
@@ -126,7 +127,7 @@ export default function App() {
     setLoading(true)
     setError(null)
     try {
-      const data = await fetchProducts(selectedCategory, searchTerm, pageToFetch, PRODUCTS_PER_PAGE)
+      const data = await fetchProducts(selectedCategory, searchTerm, pageToFetch, PRODUCTS_PER_PAGE, inStockOnly)
       if (Array.isArray(data)) {
         // Fallback in case raw array is received
         setProducts(data)
@@ -144,19 +145,19 @@ export default function App() {
     }
   }
 
-  // Reset to page 1 whenever category or search filter changes
+  // Reset to page 1 whenever category, search, or in-stock filter changes
   useEffect(() => {
     setCurrentPage(1)
-  }, [selectedCategory, searchTerm])
+  }, [selectedCategory, searchTerm, inStockOnly])
 
-  // Fetch products with a 300ms debounce whenever filter, search, or currentPage changes
+  // Fetch products with a 300ms debounce whenever filter, search, inStockOnly, or currentPage changes
   useEffect(() => {
     const timer = setTimeout(() => {
       loadProducts(currentPage)
     }, 300)
 
     return () => clearTimeout(timer)
-  }, [selectedCategory, searchTerm, currentPage])
+  }, [selectedCategory, searchTerm, inStockOnly, currentPage])
 
   // Handler to add a product to the cart with quantity tracking and stock limits
   const handleAddToCart = (product, quantityToAdd = 1) => {
@@ -363,38 +364,23 @@ export default function App() {
       </header>
 
       <main className="container">
-        {/* Modern E-Commerce Hero Banner */}
+        {/* Clean & Simple Storefront Banner */}
         <section className="hero">
-          <span className="hero-tag">Special Launch Offers</span>
-          <h1 className="hero-title">Experience Tomorrow's Tech & Lifestyle</h1>
+          <h1 className="hero-title">Welcome to PrAmazon</h1>
           <p className="hero-desc">
-            Handpicked premium gadgets, apparel, and reading essentials with authentic Indian pricing and swift dispatch.
+            Discover top-rated products with fast delivery across India.
           </p>
         </section>
 
         {/* Storefront Catalog Section */}
         <section className="storefront-section">
-          <div className="storefront-header">
-            <div>
-              <h2 className="storefront-title">Featured Catalog</h2>
-              <p className="storefront-subtitle">
-                Explore our curated collection of verified products.
-              </p>
-            </div>
-            <span className="product-count-badge">
-              {loading
-                ? 'Refreshing...'
-                : totalProducts > 0
-                ? `Showing ${(currentPage - 1) * PRODUCTS_PER_PAGE + 1}–${Math.min(currentPage * PRODUCTS_PER_PAGE, totalProducts)} of ${totalProducts} Products`
-                : '0 Products Found'}
-            </span>
-          </div>
-
-          {/* Category Filter Pills */}
+          {/* Category Filter Pills & In-Stock Toggle */}
           <CategoryFilter
             categories={categories}
             selectedCategory={selectedCategory}
             onSelectCategory={setSelectedCategory}
+            inStockOnly={inStockOnly}
+            onToggleInStock={() => setInStockOnly(!inStockOnly)}
           />
 
           {/* Loading State */}

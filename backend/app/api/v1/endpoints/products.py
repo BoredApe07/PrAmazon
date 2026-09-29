@@ -19,19 +19,21 @@ router = APIRouter(prefix="/products", tags=["Products"])
 def get_products(
     category: Optional[str] = Query(None, description="Filter products by category (e.g. Electronics, Books)"),
     search: Optional[str] = Query(None, description="Search products by title or description keyword"),
+    in_stock: Optional[bool] = Query(None, description="Filter for in-stock products only (stock > 0)"),
     page: int = Query(1, ge=1, description="Page number (1-indexed)"),
     limit: int = Query(20, ge=1, le=100, description="Items per page (max 100)"),
     db: Session = Depends(get_db)
 ):
     """
-    Fetch paginated products, with optional search keyword and category filtering.
+    Fetch paginated products, with optional search keyword, category, and in-stock filtering.
     Checks Redis cache first (Cache-Aside pattern). On miss, queries PostgreSQL
     and caches the response for 60 seconds.
     """
     # 1. Construct deterministic cache key
     norm_cat = category.strip().lower() if category else "all"
     norm_search = search.strip().lower() if search else "none"
-    cache_key = f"products:cat={norm_cat}:q={norm_search}:p={page}:l={limit}"
+    stock_key = "instock" if in_stock else "all"
+    cache_key = f"products:cat={norm_cat}:q={norm_search}:stock={stock_key}:p={page}:l={limit}"
 
     # 2. Check Redis Cache (Hit returns in ~2ms!)
     cached_payload = get_cache(cache_key)
@@ -51,6 +53,10 @@ def get_products(
             (Product.title.ilike(f"%{search}%")) | 
             (Product.description.ilike(f"%{search}%"))
         )
+
+    # In-stock only filter
+    if in_stock:
+        query = query.filter(Product.stock > 0)
 
     # Count total matching products
     total = query.count()

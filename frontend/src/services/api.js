@@ -35,12 +35,13 @@ const extractErrorMessage = (errorData, defaultMessage) => {
 /**
  * Fetch paginated products from FastAPI with optional category, search, and page parameters.
  */
-export const fetchProducts = async (category = '', search = '', page = 1, limit = 20) => {
+export const fetchProducts = async (category = '', search = '', page = 1, limit = 12, inStockOnly = false) => {
   const params = new URLSearchParams()
   if (category) params.append('category', category)
   if (search) params.append('search', search)
   if (page) params.append('page', page)
   if (limit) params.append('limit', limit)
+  if (inStockOnly) params.append('in_stock', 'true')
 
   const queryString = params.toString() ? `?${params.toString()}` : ''
   const response = await fetch(`${API_BASE_URL}/products/${queryString}`)
