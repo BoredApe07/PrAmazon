@@ -14,11 +14,10 @@ export default function OrdersModal({ onClose, onViewProduct, currentUser, onOrd
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  // Pagination & Filtering state
+  // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalOrders, setTotalOrders] = useState(0)
-  const [statusFilter, setStatusFilter] = useState('')
   const ORDERS_PER_PAGE = 10
 
   // Live search filter state
@@ -74,17 +73,12 @@ export default function OrdersModal({ onClose, onViewProduct, currentUser, onOrd
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [onClose])
 
-  // Reset to page 1 whenever statusFilter changes
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [statusFilter])
-
-  // Fetch paginated orders whenever user, page, or status filter changes
-  const loadOrders = async (pageToFetch = currentPage, statusToFetch = statusFilter) => {
+  // Fetch paginated orders whenever user or page changes
+  const loadOrders = async (pageToFetch = currentPage) => {
     setLoading(true)
     setError(null)
     try {
-      const data = await fetchOrders(pageToFetch, ORDERS_PER_PAGE, statusToFetch)
+      const data = await fetchOrders(pageToFetch, ORDERS_PER_PAGE, '')
       if (Array.isArray(data)) {
         setOrders(data)
         setTotalOrders(data.length)
@@ -102,8 +96,8 @@ export default function OrdersModal({ onClose, onViewProduct, currentUser, onOrd
   }
 
   useEffect(() => {
-    loadOrders(currentPage, statusFilter)
-  }, [currentUser, currentPage, statusFilter])
+    loadOrders(currentPage)
+  }, [currentUser, currentPage])
 
   // Format currency in Indian Rupees without paise (e.g. ₹24,990)
   const formatINR = (amount) =>
@@ -147,9 +141,6 @@ export default function OrdersModal({ onClose, onViewProduct, currentUser, onOrd
         <div className="orders-modal-header">
           <div>
             <h2 className="orders-modal-title">Returns & Orders</h2>
-            <p className="orders-modal-subtitle">
-              Track packages, inspect receipts, and manage your recent purchases
-            </p>
           </div>
           <button
             className="orders-modal-close"
@@ -160,7 +151,7 @@ export default function OrdersModal({ onClose, onViewProduct, currentUser, onOrd
           </button>
         </div>
 
-        {/* Live Search Bar & Status Filters */}
+        {/* Live Search Bar */}
         <div className="orders-lookup-bar">
           <div className="orders-lookup-form">
             <span className="lookup-icon">🔍</span>
@@ -180,27 +171,6 @@ export default function OrdersModal({ onClose, onViewProduct, currentUser, onOrd
                 Clear
               </button>
             )}
-          </div>
-
-          {/* Status Filter Pills */}
-          <div className="orders-status-filter-pills">
-            {[
-              { label: 'All Orders', value: '' },
-              { label: 'Confirmed', value: 'confirmed' },
-              { label: 'Shipped', value: 'shipped' },
-              { label: 'Out for Delivery', value: 'out_for_delivery' },
-              { label: 'Delivered', value: 'delivered' },
-              { label: 'Cancelled', value: 'cancelled' },
-            ].map((tab) => (
-              <button
-                key={tab.value}
-                type="button"
-                className={`orders-filter-pill ${statusFilter === tab.value ? 'active' : ''}`}
-                onClick={() => setStatusFilter(tab.value)}
-              >
-                {tab.label}
-              </button>
-            ))}
           </div>
         </div>
 
