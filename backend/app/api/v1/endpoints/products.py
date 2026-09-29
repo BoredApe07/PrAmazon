@@ -1,9 +1,11 @@
 import math
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.redis import get_cache, set_cache, invalidate_cache_pattern
 from app.models.product import Product
 from app.models.user import User
 from app.schemas.product import ProductCreate, ProductResponse, PaginatedProductResponse
@@ -23,48 +25,72 @@ def get_products(
 ):
     """
     Fetch paginated products, with optional search keyword and category filtering.
-    Returns items along with total count, current page, limit, and total pages.
+    Checks Redis cache first (Cache-Aside pattern). On miss, queries PostgreSQL
+    and caches the response for 60 seconds.
     """
+    # 1. Construct deterministic cache key
+    norm_cat = category.strip().lower() if category else "all"
+    norm_search = search.strip().lower() if search else "none"
+    cache_key = f"products:cat={norm_cat}:q={norm_search}:p={page}:l={limit}"
+
+    # 2. Check Redis Cache (Hit returns in ~2ms!)
+    cached_payload = get_cache(cache_key)
+    if cached_payload is not None:
+        return cached_payload
+
+    # 3. Cache Miss: Query PostgreSQL
     query = db.query(Product)
 
-    # 1. Category Filter (Case-insensitive)
+    # Category Filter (Case-insensitive)
     if category:
         query = query.filter(Product.category.ilike(f"%{category}%"))
 
-    # 2. Keyword Search across Title OR Description
+    # Keyword Search across Title OR Description
     if search:
         query = query.filter(
             (Product.title.ilike(f"%{search}%")) | 
             (Product.description.ilike(f"%{search}%"))
         )
 
-    # 3. Count total matching products
+    # Count total matching products
     total = query.count()
     total_pages = math.ceil(total / limit) if total > 0 else 1
 
-    # 4. Deterministic slice via offset and limit
+    # Deterministic slice via offset and limit
     skip = (page - 1) * limit
     items = query.order_by(Product.id.asc()).offset(skip).limit(limit).all()
 
-    return {
-        "items": items,
+    response_payload = {
+        "items": jsonable_encoder(items),
         "total": total,
         "page": page,
         "limit": limit,
         "total_pages": total_pages
     }
 
+    # 4. Save into Redis (TTL = 60s)
+    set_cache(cache_key, response_payload, ttl_seconds=60)
+
+    return response_payload
+
 
 @router.get("/categories", response_model=List[str])
 def get_categories(db: Session = Depends(get_db)):
     """
     Fetch all unique product categories available in the store.
-    Example: ["Electronics", "Home & Kitchen", "Fashion", "Books"]
+    Cached in Redis for 300 seconds (5 minutes).
     """
-    # Query distinct categories from SQLite
+    cache_key = "products:categories"
+    cached = get_cache(cache_key)
+    if cached is not None:
+        return cached
+
+    # Query distinct categories from PostgreSQL
     results = db.query(Product.category).distinct().all()
-    # Extract strings from SQL tuples: [('Electronics',), ...] -> ['Electronics', ...]
-    return [c[0] for c in results]
+    categories = [c[0] for c in results]
+
+    set_cache(cache_key, categories, ttl_seconds=300)
+    return categories
 
 
 @router.get("/{product_id}", response_model=ProductResponse)
@@ -106,7 +132,10 @@ def create_product(
     db.add(new_product)
     db.commit()
 
-    # 3. Refresh loads the auto-generated 'id' back from SQLite
+    # 3. Refresh loads the auto-generated 'id' back from PostgreSQL
     db.refresh(new_product)
+
+    # 4. Invalidate stale product caches so new product is immediately visible
+    invalidate_cache_pattern("products:*")
 
     return new_product

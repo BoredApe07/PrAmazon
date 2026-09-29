@@ -16,6 +16,10 @@ class Settings(BaseSettings):
     DATABASE_URL: str = ""
     DATABASE_URL_POOLED: str = ""
 
+    # Upstash Redis Connection String
+    # Strictly loaded from .env - NEVER hardcode credentials in source code!
+    REDIS_URL: str = ""
+
     # Cryptographic JWT Security Settings
     # Strictly loaded from .env - NEVER hardcode secret keys in source code!
     SECRET_KEY: str = ""

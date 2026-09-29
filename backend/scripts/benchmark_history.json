@@ -1,0 +1,40 @@
+[
+  {
+    "label": "Baseline (PostgreSQL Only - No Redis)",
+    "url": "http://127.0.0.1:8000/api/v1/products/?page=1&limit=20",
+    "total_requests": 200,
+    "concurrency": 20,
+    "total_duration_sec": 15.11,
+    "throughput_req_per_sec": 13.24,
+    "min_ms": 424.03,
+    "avg_ms": 1198.93,
+    "p50_ms": 774.27,
+    "p90_ms": 2268.24,
+    "p95_ms": 4696.4,
+    "p99_ms": 6435.82,
+    "max_ms": 6489.24,
+    "status_codes": {
+      "200": 200
+    },
+    "timestamp": 1790608270.0000913
+  },
+  {
+    "label": "Phase 2 (With Upstash Redis Cache)",
+    "url": "http://127.0.0.1:8000/api/v1/products/?page=1&limit=20",
+    "total_requests": 200,
+    "concurrency": 20,
+    "total_duration_sec": 5.1,
+    "throughput_req_per_sec": 39.19,
+    "min_ms": 131.53,
+    "avg_ms": 482.67,
+    "p50_ms": 294.15,
+    "p90_ms": 1292.07,
+    "p95_ms": 1811.1,
+    "p99_ms": 2081.99,
+    "max_ms": 2104.59,
+    "status_codes": {
+      "200": 200
+    },
+    "timestamp": 1790707719.818273
+  }
+]
