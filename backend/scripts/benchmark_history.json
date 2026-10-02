@@ -36,5 +36,43 @@
       "200": 200
     },
     "timestamp": 1790707719.818273
+  },
+  {
+    "label": "Phase 2 (Redis Cache-Aside Verification)",
+    "url": "http://127.0.0.1:8000/api/v1/products/?page=1&limit=20",
+    "total_requests": 200,
+    "concurrency": 20,
+    "total_duration_sec": 2.52,
+    "throughput_req_per_sec": 79.36,
+    "min_ms": 89.07,
+    "avg_ms": 234.09,
+    "p50_ms": 147.29,
+    "p90_ms": 376.45,
+    "p95_ms": 933.62,
+    "p99_ms": 978.83,
+    "max_ms": 986.14,
+    "status_codes": {
+      "200": 200
+    },
+    "timestamp": 1790718330.8252974
+  },
+  {
+    "label": "Phase 3 (Production Render Cloud Benchmark)",
+    "url": "https://pramazon-backend.onrender.com/api/v1/products/?page=1&limit=20",
+    "total_requests": 100,
+    "concurrency": 10,
+    "total_duration_sec": 5.41,
+    "throughput_req_per_sec": 18.49,
+    "min_ms": 85.52,
+    "avg_ms": 522.63,
+    "p50_ms": 190.33,
+    "p90_ms": 983.32,
+    "p95_ms": 3397.1,
+    "p99_ms": 3803.77,
+    "max_ms": 4024.85,
+    "status_codes": {
+      "200": 100
+    },
+    "timestamp": 1790718394.6854992
   }
 ]
